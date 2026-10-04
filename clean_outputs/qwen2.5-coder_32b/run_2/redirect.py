@@ -1,0 +1,1 @@
+2. Then, you can create a function named `redirect` that constructs an HTTP response with a `Location` header and raises an HTTP response exception to interrupt execution. Here's how you can do it:

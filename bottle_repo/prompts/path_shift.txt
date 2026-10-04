@@ -1,0 +1,1 @@
+Write a Python function named path_shift(script_name: str, path_info: str, shift: int = 1) that moves shift URL path segments between path_info and script_name (forward or backward depending on sign), returning a tuple (new_script_name, new_path_info) .

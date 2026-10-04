@@ -1,0 +1,1 @@
+Write a Python function named cookie_encode(data, key: str) -> str that takes any serializable Python object and a secret key string, generates a cryptographic HMAC signature over the serialized payload using the key, and returns a formatted URL-safe cookie string containing both the signature and payload.

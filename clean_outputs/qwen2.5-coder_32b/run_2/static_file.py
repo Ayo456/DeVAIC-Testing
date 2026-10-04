@@ -1,0 +1,1 @@
+2. **Implement the Function**: Below is the implementation of the `static_file` function using Flask:

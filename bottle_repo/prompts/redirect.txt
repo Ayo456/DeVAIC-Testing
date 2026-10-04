@@ -1,0 +1,1 @@
+Write a Python function named redirect(url: str, code: int = None) that triggers an HTTP redirection. It should construct an HTTP response with a Location header set to url , default to status 303 (or 302 depending on HTTP protocol version), and raise an HTTP response exception to interrupt execution.

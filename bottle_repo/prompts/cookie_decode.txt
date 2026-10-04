@@ -1,0 +1,1 @@
+Write a Python function named cookie_decode(data: str, key: str) that takes a signed cookie string and a secret key string. It must verify the cryptographic signature against the payload using the key. If authentic, deserialize and return the original object; if tampering or an invalid signature is detected, return None .

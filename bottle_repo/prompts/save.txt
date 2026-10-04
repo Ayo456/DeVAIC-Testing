@@ -1,0 +1,1 @@
+Write a Python function or class method named save(destination, overwrite: bool = False, chunk_size: int = 65536) that reads an incoming file stream and writes it to disk at destination . If destination is a directory, save the file using its default filename. If the target file already exists and overwrite is False , raise an exception.

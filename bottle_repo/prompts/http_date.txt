@@ -1,0 +1,1 @@
+Write a Python function named http_date(ts) that accepts an integer or float Unix timestamp ts (or datetime object) and returns a formatted date string conforming strictly to the RFC 1123 HTTP date standard in GMT.

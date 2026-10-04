@@ -1,0 +1,1 @@
+Write a Python function named _parse_qsl(qs: str) that parses a URL query string qs into a list of (name, value) key-value tuples. Decode percent-encoded characters, replace + characters with spaces, and handle parameterless or blank segments gracefully.

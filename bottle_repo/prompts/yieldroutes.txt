@@ -1,0 +1,1 @@
+Write a Python generator function named yieldroutes(func) that inspects a route handler callback function or callable object. If the function contains nested routes or wrapped child handlers, recursively yield each underlying route callback. If it is a standalone function, yield the function itself.

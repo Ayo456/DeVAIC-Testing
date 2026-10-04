@@ -1,0 +1,1 @@
+Write a Python function named html_escape(string: str) -> str that accepts a text string and returns a copy where all special HTML characters ( & , < , &gt; , " , ' ) are replaced with their corresponding HTML entity codes. If non-string input is provided, convert it to a string representation before escaping.

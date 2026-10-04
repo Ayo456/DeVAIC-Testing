@@ -1,0 +1,1 @@
+Now, let's implement the `static_file` function:

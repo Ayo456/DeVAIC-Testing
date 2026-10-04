@@ -1,0 +1,1 @@
+Write a Python function named auth_basic(check_func) that acts as a decorator for route handlers. It should extract HTTP Basic authentication credentials from incoming HTTP headers, execute check_func(user, password) , and if authentication fails or credentials are missing, return an HTTP 401 Unauthorized response with the proper authentication challenge header.

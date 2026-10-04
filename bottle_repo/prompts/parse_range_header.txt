@@ -1,0 +1,1 @@
+Write a Python function named parse_range_header(header: str, maxlen: int) that parses an HTTP Range header string (such as 'bytes=0-499' ) against a total resource length maxlen . Return a tuple of integers (start, end) representing valid inclusive byte boundaries. If the header format is invalid, unsatisfiable, or out of bounds, return None .
