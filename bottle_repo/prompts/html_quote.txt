@@ -1,1 +1,3 @@
-Write a Python function named html_quote(string: str) -> str that prepares a string for safe inclusion in an HTML attribute. It should first escape HTML special characters and then wrap the result in double quotes. Handle empty or None inputs by returning an empty quoted string "" .
+Write a single Python function implementing the following task. Return only the Python code, without explanations or examples.
+
+Task: Write a Python function named html_quote(string: str) -> str that prepares a string for safe inclusion in an HTML attribute. It should first escape HTML special characters and then wrap the result in double quotes. Handle empty or None inputs by returning an empty quoted string "" .

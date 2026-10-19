@@ -1,31 +1,157 @@
+import ast
 import csv
 import glob
 import os
-import subprocess
 import sys
 
 from radon.complexity import cc_visit
-from radon.metrics import mi_visit
+from radon.metrics import h_visit, mi_visit
 from radon.raw import analyze as raw_analyze
 
 
-CLEAN_DIR = "clean_outputs\gemma2_9b"
+# Closed models are only reachable through a vendor API; open-weight models
+# publish their weights and run locally through Ollama.
+MODEL_TYPES = {
+    "qwen": "Open-weight",
+    "gemma": "Open-weight",
+    "chatgpt": "Closed",
+    "gpt": "Closed",
+    "gemini": "Closed",
+}
+
+SYNTAX_ERROR = "Syntax Error"
+PARSE_ERROR = "Parse Error"
+
+HALSTEAD_FIELDS = {
+    "Halstead_Distinct_Operators": "h1",
+    "Halstead_Distinct_Operands": "h2",
+    "Halstead_Total_Operators": "N1",
+    "Halstead_Total_Operands": "N2",
+    "Halstead_Vocabulary": "vocabulary",
+    "Halstead_Length": "length",
+    "Halstead_Volume": "volume",
+    "Halstead_Difficulty": "difficulty",
+    "Halstead_Effort": "effort",
+    "Halstead_Time": "time",
+    "Halstead_Bugs": "bugs",
+}
+
+NESTING_NODES = (
+    ast.If,
+    ast.For,
+    ast.AsyncFor,
+    ast.While,
+    ast.Try,
+    ast.With,
+    ast.AsyncWith,
+    ast.Match,
+) + ((ast.TryStar,) if hasattr(ast, "TryStar") else ())
+
+
+def get_model_type(model_folder):
+    name = model_folder.lower()
+    for keyword, model_type in MODEL_TYPES.items():
+        if keyword in name:
+            return model_type
+    return "Unknown"
+
+
+def max_nesting_depth(node, depth=0):
+    """Deepest level of nested control-flow blocks; an elif does not add a level."""
+    deepest = depth
+
+    for field, value in ast.iter_fields(node):
+        children = value if isinstance(value, list) else [value]
+
+        for child in children:
+            if not isinstance(child, ast.AST):
+                continue
+
+            is_elif = (
+                isinstance(node, ast.If)
+                and field == "orelse"
+                and len(node.orelse) == 1
+                and isinstance(child, ast.If)
+            )
+
+            if isinstance(child, NESTING_NODES) and not is_elif:
+                child_depth = max_nesting_depth(child, depth + 1)
+            else:
+                child_depth = max_nesting_depth(child, depth)
+
+            deepest = max(deepest, child_depth)
+
+    return deepest
+
+
+# ==================== TARGET CONFIGURATION ====================
+# Set to True to calculate metrics ONLY for the target files
+TARGET_ONLY = True
+
+# Matches any model folder containing 'qwen' (e.g. 'qwen2.5-coder_32b')
+TARGET_MODEL_KEYWORD = "qwen"
+
+# The EXACT 7 (filename, run_folder) pairs to process for Qwen:
+TARGET_PAIRS = [
+    ("redirect.py", "run_1"),
+    ("redirect.py", "run_2"),
+    ("static_file.py", "run_1"),
+    ("static_file.py", "run_2"),
+    ("template.py", "run_1"),
+    ("template.py", "run_2"),
+    ("template.py", "run_3"),
+]
+# =============================================================
+
+
+CLEAN_DIR = "./clean_outputs"
 OUTPUT_CSV = "software_metrics.csv"
 
-rows = []
-
-python_files = sorted(
+all_files = sorted(
     glob.glob(f"{CLEAN_DIR}/**/*.py", recursive=True)
 )
 
+python_files = []
+
+for filepath in all_files:
+    rel_path = os.path.relpath(filepath, CLEAN_DIR)
+    parts = rel_path.split(os.sep)
+
+    if len(parts) >= 3:
+        model_folder, parent_run, filename = parts[0], parts[1], parts[2]
+
+    else:
+        filename = os.path.basename(filepath)
+        parent_run = os.path.basename(os.path.dirname(filepath))
+        model_folder = os.path.basename(
+            os.path.dirname(
+                os.path.dirname(filepath)
+            )
+        )
+
+    if TARGET_ONLY:
+        is_qwen = TARGET_MODEL_KEYWORD in model_folder.lower()
+        is_target_pair = (filename, parent_run) in TARGET_PAIRS
+
+        if is_qwen and is_target_pair:
+            python_files.append(filepath)
+
+    else:
+        python_files.append(filepath)
+
 if not python_files:
-    print(f"No files found in '{CLEAN_DIR}'. Please check the directory path.")
+    print(
+        f"No matching files found in '{CLEAN_DIR}' for model keyword"
+        f" '{TARGET_MODEL_KEYWORD}'."
+    )
     sys.exit(1)
 
 print(
-    f"Processing software metrics for {len(python_files)} files (including"
-    " error tracking)..."
+    f"Processing software metrics for {len(python_files)} selected Qwen"
+    " target files..."
 )
+
+rows = []
 
 for filepath in python_files:
     filename = os.path.basename(filepath)
@@ -39,14 +165,15 @@ for filepath in python_files:
     avg_cc = "N/A"
     max_cc = "N/A"
     mi = "N/A"
-    pylint_score = "N/A"
+    nesting = "N/A"
+    halstead = dict.fromkeys(HALSTEAD_FIELDS, "N/A")
     error_msg = ""
 
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             code = f.read()
 
-        # 1. Raw SLOC (Attempts Radon first; falls back to raw line count if parse fails)
+        # 1. Raw SLOC
         try:
             raw = raw_analyze(code)
             sloc = raw.sloc
@@ -77,61 +204,66 @@ for filepath in python_files:
                 max_cc = 0
 
         except Exception as e:
-            status = "Syntax Error"
-            avg_cc = "Parse Error"
-            max_cc = "Parse Error"
+            status = SYNTAX_ERROR
+            avg_cc = PARSE_ERROR
+            max_cc = PARSE_ERROR
             error_msg = f"Radon CC: {type(e).__name__}"
 
         # 3. Maintainability Index
         try:
-            mi = round(mi_visit(code, multi=True), 2)
+            mi = round(
+                mi_visit(code, multi=True),
+                2,
+            )
 
         except Exception as e:
-            status = "Syntax Error"
-            mi = "Parse Error"
+            status = SYNTAX_ERROR
+            mi = PARSE_ERROR
 
             if not error_msg:
                 error_msg = f"Radon MI: {type(e).__name__}"
 
-        # 4. Pylint Score
+        # 4. Maximum Nesting Depth
         try:
-            res = subprocess.run(
-                [sys.executable, "-m", "pylint", filepath],
-                capture_output=True,
-                text=True,
-                timeout=15,
-            )
+            nesting = max_nesting_depth(ast.parse(code))
 
-            for line in res.stdout.splitlines():
-                if "rated at" in line:
-                    pylint_score = (
-                        line.split("rated at")[1]
-                        .split("/10")[0]
-                        .strip()
-                    )
-                    break
+        except Exception as e:
+            status = SYNTAX_ERROR
+            nesting = PARSE_ERROR
 
-            if pylint_score == "N/A":
-                pylint_score = "Parse Error"
+            if not error_msg:
+                error_msg = f"Nesting: {type(e).__name__}"
 
-        except Exception:
-            pylint_score = "Exec Error"
+        # 5. Halstead Measures (whole file)
+        try:
+            h_total = h_visit(code).total
+
+            for column, attr in HALSTEAD_FIELDS.items():
+                halstead[column] = round(getattr(h_total, attr), 2)
+
+        except Exception as e:
+            status = SYNTAX_ERROR
+            halstead = dict.fromkeys(HALSTEAD_FIELDS, PARSE_ERROR)
+
+            if not error_msg:
+                error_msg = f"Radon Halstead: {type(e).__name__}"
 
     except Exception as main_err:
         status = "File Error"
         error_msg = str(main_err)
 
-    # Always append the row to ensure 100% file coverage in the CSV
     rows.append(
         {
             "File": filename,
             "Model_Run": model_run_folder,
+            "Model_Type": get_model_type(model_run_folder),
             "Status": status,
             "SLOC": sloc,
             "Avg_Cyclomatic_Complexity": avg_cc,
             "Max_Cyclomatic_Complexity": max_cc,
             "Maintainability_Index": mi,
-            "Pylint_Score": pylint_score,
+            "Max_Nesting_Depth": nesting,
+            **halstead,
             "Error_Details": error_msg,
             "Path": filepath,
         }
@@ -143,7 +275,7 @@ for filepath in python_files:
         f" [{status_flag}] {filename} ({model_run_folder}) -> Status: {status}"
     )
 
-# Write all results (including syntax errors) to the CSV
+# Write to CSV
 if rows:
     with open(
         OUTPUT_CSV,
@@ -154,12 +286,14 @@ if rows:
         fieldnames = [
             "File",
             "Model_Run",
+            "Model_Type",
             "Status",
             "SLOC",
             "Avg_Cyclomatic_Complexity",
             "Max_Cyclomatic_Complexity",
             "Maintainability_Index",
-            "Pylint_Score",
+            "Max_Nesting_Depth",
+            *HALSTEAD_FIELDS,
             "Error_Details",
             "Path",
         ]
@@ -173,6 +307,6 @@ if rows:
         writer.writerows(rows)
 
 print(
-    f"\n✓ Done! Metrics and error logs recorded for all {len(rows)} files in"
+    f"\n✓ Done! Metrics recorded for {len(rows)} target files in"
     f" '{OUTPUT_CSV}'."
 )

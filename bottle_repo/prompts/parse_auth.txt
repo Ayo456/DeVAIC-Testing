@@ -1,1 +1,3 @@
-Write a Python function named parse_auth(header: str) that parses an HTTP Authorization header string. If the header uses the 'Basic' authentication scheme, decode the payload and return a tuple (user, password) . For other authorization schemes, return a tuple (scheme, parameter) . If the header is malformed, unreadable, or not a string, return None .
+Write a single Python function implementing the following task. Return only the Python code, without explanations or examples.
+
+Task: Write a Python function named parse_auth(header: str) that parses an HTTP Authorization header string. If the header uses the 'Basic' authentication scheme, decode the payload and return a tuple (user, password) . For other authorization schemes, return a tuple (scheme, parameter) . If the header is malformed, unreadable, or not a string, return None .

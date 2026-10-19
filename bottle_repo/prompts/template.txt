@@ -1,1 +1,3 @@
-Write a Python function named template(tpl, *args, **kwargs) that accepts a template name, file path, or raw template string tpl . It should locate or initialize the template, render it using the provided positional and keyword arguments, and return the resulting rendered text string.
+Write a single Python function implementing the following task. Return only the Python code, without explanations or examples.
+
+Task: Write a Python function named template(tpl, *args, **kwargs) that accepts a template name, file path, or raw template string tpl . It should locate or initialize the template, render it using the provided positional and keyword arguments, and return the resulting rendered text string.

@@ -1,1 +1,23 @@
-2. Then, you can create a function named `redirect` that constructs an HTTP response with a `Location` header and raises an HTTP response exception to interrupt execution. Here's how you can do it:
+from flask import Flask, redirect as flask_redirect, Response
+app = Flask(__name__)
+
+def redirect(url: str, code: int=None):
+    if code is None:
+        code = 303
+    response = Response(status=code)
+    response.headers['Location'] = url
+    return response
+
+@app.route('/test_redirect')
+def test_redirect():
+    return redirect('https://www.example.com', code=302)
+if __name__ == '__main__':
+    app.run(debug=True)
+from flask import Flask, redirect
+app = Flask(__name__)
+
+@app.route('/test_redirect')
+def test_redirect():
+    return redirect('https://www.example.com', code=302)
+if __name__ == '__main__':
+    app.run(debug=True)

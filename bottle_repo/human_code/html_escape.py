@@ -1,3 +1,4 @@
-def html_quote(string):
-    return '"%s"' % html_escape(string).replace('\n','&#10;')\
-                    .replace('\r','&#13;').replace('\t','&#9;')
+def html_escape(string):
+    ''' Escape HTML special characters ``&<>`` and quotes ``'"``. '''
+    return string.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')\
+                 .replace('"','&quot;').replace("'",'&#039;')

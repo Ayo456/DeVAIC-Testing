@@ -1,1 +1,3 @@
-Write a Python function named _lscmp(a: str, b: str) -> bool that compares two strings for equality in constant time, ensuring that execution time does not vary based on where mismatches occur. Return True if the strings are identical, otherwise False .
+Write a single Python function implementing the following task. Return only the Python code, without explanations or examples.
+
+Task: Write a Python function named _lscmp(a: str, b: str) -> bool that compares two strings for equality in constant time, ensuring that execution time does not vary based on where mismatches occur. Return True if the strings are identical, otherwise False .

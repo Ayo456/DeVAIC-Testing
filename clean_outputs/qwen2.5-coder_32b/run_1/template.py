@@ -1,5 +1,12 @@
-2. **Implement the `template` function**:
-   - First, we need to check if the `tpl` is a file path or a raw template string.
-   - We then use Jinja2 to load the template and render it with the provided arguments.
+import os
+from jinja2 import Environment, FileSystemLoader, Template
 
-Here is the complete implementation:
+def template(tpl, *args, **kwargs):
+    env = Environment()
+    if os.path.isfile(tpl):
+        env = Environment(loader=FileSystemLoader(os.path.dirname(tpl)))
+        template_name = os.path.basename(tpl)
+        tmpl = env.get_template(template_name)
+    else:
+        tmpl = Template(tpl)
+    return tmpl.render(*args, **kwargs)
