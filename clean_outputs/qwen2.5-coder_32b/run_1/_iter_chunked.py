@@ -1,37 +1,29 @@
 def _iter_chunked(read_func, bufsize: int=102400):
-
-    def read_line():
-        line = bytearray()
+    while True:
+        chunk_header = b''
         while True:
             byte = read_func(1)
             if not byte:
+                raise ValueError('Unexpected end of stream while reading chunk header')
+            chunk_header += byte
+            if b'\r\n' in chunk_header:
                 break
-            line.append(byte[0])
-            if line.endswith(b'\r\n'):
-                break
-            if len(line) > bufsize:
-                raise ValueError('Chunk header exceeds bufsize')
-        return line
-    while True:
-        chunk_length_line = read_line()
-        if not chunk_length_line:
-            raise ValueError('Unexpected end of stream while reading chunk length')
+            if len(chunk_header) > bufsize:
+                raise ValueError('Chunk header exceeds maximum buffer size')
+        chunk_length_str, _ = chunk_header.split(b'\r\n', 1)
         try:
-            chunk_length_str = chunk_length_line.decode('ascii').split(';', 1)[0].strip()
             chunk_length = int(chunk_length_str, 16)
         except ValueError:
-            raise ValueError(f'Invalid chunk length header: {chunk_length_line}')
+            raise ValueError('Invalid hexadecimal chunk length')
         if chunk_length == 0:
-            while read_line().strip():
-                pass
             break
-        chunk_data = bytearray()
+        chunk_data = b''
         while len(chunk_data) < chunk_length:
             data = read_func(chunk_length - len(chunk_data))
             if not data:
                 raise ValueError('Unexpected end of stream while reading chunk data')
-            chunk_data.extend(data)
-        crlf = read_func(2)
-        if crlf != b'\r\n':
-            raise ValueError('Expected CRLF after chunk data')
+            chunk_data += data
+        trailer = read_func(2)
+        if trailer != b'\r\n':
+            raise ValueError('Invalid chunk trailer')
         yield chunk_data

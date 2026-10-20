@@ -1,21 +1,14 @@
-import base64
-import re
+from email.utils import parsedate_to_datetime
+from datetime import datetime
 
-def parse_auth(header: str) -> tuple:
-    if not isinstance(header, str):
-        return None
-    auth_pattern = re.compile('^(\\w+)\\s+(\\S+)$')
-    match = auth_pattern.match(header)
-    if not match:
-        return None
-    scheme = match.group(1)
-    parameter = match.group(2)
-    if scheme.lower() == 'basic':
+def parse_date(ims: str) -> int:
+    try:
+        return int(parsedate_to_datetime(ims).timestamp())
+    except (TypeError, ValueError):
         try:
-            decoded_bytes = base64.b64decode(parameter)
-            decoded_str = decoded_bytes.decode('utf-8')
-            user, password = decoded_str.split(':', 1)
-            return (user, password)
-        except (base64.binascii.Error, UnicodeDecodeError, ValueError):
-            return None
-    return (scheme, parameter)
+            return int(datetime.strptime(ims, '%A, %d-%b-%y %H:%M:%S %Z').timestamp())
+        except ValueError:
+            try:
+                return int(datetime.strptime(ims, '%a %b %d %H:%M:%S %Y').timestamp())
+            except ValueError:
+                return None

@@ -1,15 +1,8 @@
 def yieldroutes(func):
-    if hasattr(func, '__child_routes__'):
-        for child in func.__child_routes__:
-            yield from yieldroutes(child)
+    if hasattr(func, '__wrapped__'):
+        yield from yieldroutes(func.__wrapped__)
+    elif hasattr(func, 'subroutes'):
+        for subroute in func.subroutes:
+            yield from yieldroutes(subroute.handler)
     else:
         yield func
-
-def standalone_route():
-    return 'Standalone route'
-
-def parent_route():
-    return 'Parent route'
-parent_route.__child_routes__ = [standalone_route, lambda: 'Child route 1', lambda: 'Child route 2']
-for route in yieldroutes(parent_route):
-    print(route.__name__ if hasattr(route, '__name__') else route.__class__.__name__)

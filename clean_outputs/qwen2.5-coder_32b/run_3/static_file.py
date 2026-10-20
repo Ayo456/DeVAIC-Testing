@@ -1,25 +1,19 @@
 import os
 import mimetypes
-from flask import Flask, send_file, abort
-app = Flask(__name__)
+from http import HTTPStatus
+from wsgiref.util import FileWrapper
+from werkzeug.exceptions import NotFound, Forbidden
+from werkzeug.wrappers import Response
 
 def static_file(filename: str, root: str, mimetype='auto', download=False):
-    root = os.path.abspath(root)
-    full_path = os.path.join(root, filename)
-    normalized_path = os.path.normpath(full_path)
-    if not normalized_path.startswith(root):
-        abort(403)
-    if not os.path.isfile(normalized_path):
-        abort(404)
-    if mimetype == 'auto':
-        mimetype, _ = mimetypes.guess_type(normalized_path)
-        if mimetype is None:
-            mimetype = 'application/octet-stream'
-    as_attachment = filename if download else False
-    return send_file(normalized_path, mimetype=mimetype, as_attachment=as_attachment)
-
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    return static_file(filename, '/path/to/static/files')
-if __name__ == '__main__':
-    app.run(debug=True)
+    safe_path = os.path.abspath(os.path.join(root, filename))
+    if not safe_path.startswith(os.path.abspath(root) + os.sep):
+        raise Forbidden(description='Access to the requested resource is forbidden.')
+    if not os.path.exists(safe_path) or not os.path.isfile(safe_path):
+        raise NotFound(description='The requested file was not found.')
+    guessed_type, _ = mimetypes.guess_type(safe_path)
+    content_type = guessed_type if mimetype == 'auto' else mimetype
+    headers = {'Content-Type': content_type}
+    if download:
+        headers['Content-Disposition'] = f'attachment; filename="{os.path.basename(filename)}"'
+    return Response(FileWrapper(open(safe_path, 'rb')), headers=headers, status=HTTPStatus.OK)

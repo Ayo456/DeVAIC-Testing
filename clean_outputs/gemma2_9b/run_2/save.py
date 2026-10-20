@@ -1,16 +1,12 @@
-import os
-
-class FileHandler:
-
-    def save(self, destination, overwrite: bool=False, chunk_size: int=65536):
-        if os.path.isdir(destination):
-            filename = os.path.basename(self.stream.name)
-            destination = os.path.join(destination, filename)
-        if os.path.exists(destination) and (not overwrite):
-            raise FileExistsError(f"File '{destination}' already exists. Use overwrite=True to replace it.")
-        with open(destination, 'wb') as f:
-            while True:
-                chunk = self.stream.read(chunk_size)
-                if not chunk:
-                    break
-                f.write(chunk)
+def save(destination, overwrite: bool=False, chunk_size: int=65536):
+    import os
+    if os.path.isdir(destination):
+        destination = os.path.join(destination, os.path.basename(stream.name))
+    if os.path.exists(destination) and (not overwrite):
+        raise Exception(f"File '{destination}' already exists.")
+    with open(destination, 'wb') as f:
+        while True:
+            chunk = stream.read(chunk_size)
+            if not chunk:
+                break
+            f.write(chunk)

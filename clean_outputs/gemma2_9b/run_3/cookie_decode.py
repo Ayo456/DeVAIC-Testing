@@ -1,15 +1,12 @@
-import base64
 import json
-import hmac
+from hashlib import sha256
 
-def cookie_decode(data: str, key: str) -> any:
+def cookie_decode(data: str, key: str):
     try:
-        payload, signature = data.split('.', 2)
-        decoded_payload = base64.b64decode(payload)
-        message = json.loads(decoded_payload)
-        expected_signature = hmac.new(key.encode(), message.encode(), 'sha256').digest()
-        if hmac.compare_digest(signature, base64.b64encode(expected_signature).decode()):
-            return message
+        header, payload, signature = data.split('.')
+        computed_signature = sha256(payload.encode()).hexdigest()
+        if computed_signature == signature:
+            return json.loads(payload)
         else:
             return None
     except:

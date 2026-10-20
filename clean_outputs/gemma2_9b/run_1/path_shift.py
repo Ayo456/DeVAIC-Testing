@@ -1,14 +1,10 @@
 def path_shift(script_name: str, path_info: str, shift: int=1) -> tuple:
-    parts_script = script_name.split('/')
-    parts_path = path_info.split('/')
-    shifted_parts = []
-    count = 0
-    for i in range(len(parts_script) + len(parts_path)):
-        if count < shift:
-            shifted_parts.append(parts_path.pop(0)) if parts_path else ''
-            count += 1
+    parts = path_info.split('/')
+    new_script_name = script_name
+    new_path_info = ''
+    for i in range(shift):
+        if len(parts) > 0:
+            new_path_info = f'{new_path_info}/{parts.pop(0)}'
         else:
-            shifted_parts.append(parts_script.pop(0)) if parts_script else ''
-    new_script_name = '/'.join(shifted_parts[:len(parts_script)])
-    new_path_info = '/'.join(shifted_parts[len(parts_script):])
+            new_script_name = f'{new_script_name}/{parts.pop(0)}'
     return (new_script_name, new_path_info)

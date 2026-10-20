@@ -1,23 +1,19 @@
-from functools import wraps
-import falcon
-
 def auth_basic(check_func):
 
-    @wraps(check_func)
-    def decorated(self, req, resp):
-        try:
-            auth_header = req.get_header('Authorization')
-            if not auth_header:
-                raise falcon.HTTPUnauthorized('Authentication required')
-            auth_method, encoded_credentials = auth_header.split(' ', 1)
-            if auth_method.lower() != 'basic':
-                raise falcon.HTTPUnauthorized('Invalid authentication method')
-            user, password = falcon.utils.base64_decode(encoded_credentials).strip().split(':')
-            if not check_func(user, password):
-                raise falcon.HTTPUnauthorized('Authentication failed')
-            check_func(self, req, resp)
-        except falcon.HTTPUnauthorized as e:
-            resp.status = falcon.HTTP_401
-            resp.body = 'Authentication required'
-            resp.set_header('WWW-Authenticate', 'Basic realm="Example Realm"')
-    return decorated
+    def decorator(handler):
+
+        def inner(request):
+            auth = request.headers.get('Authorization')
+            if auth:
+                try:
+                    user, password = auth.split(' ')[1].decode('base64').split(':')
+                    if check_func(user, password):
+                        return handler(request)
+                    else:
+                        return 'HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm="Restricted Area"\r\n'
+                except:
+                    return 'HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm="Restricted Area"\r\n'
+            else:
+                return 'HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm="Restricted Area"\r\n'
+        return inner
+    return decorator

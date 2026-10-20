@@ -1,25 +1,17 @@
-import functools
-from flask import Flask, request, jsonify, make_response
-
 def auth_basic(check_func):
 
-    @functools.wraps(check_func)
-    def wrapper(*args, **kwargs):
-        auth = request.authorization
-        if not auth or not auth.username or (not auth.password):
-            return make_response(jsonify({'error': 'Authentication required'}), 401)
-        if not check_func(auth.username, auth.password):
-            return make_response(jsonify({'error': 'Invalid credentials'}), 401)
-        return check_func(*args, **kwargs)
-    return wrapper
-app = Flask(__name__)
+    def decorator(handler):
 
-def check_credentials(username, password):
-    return username == 'user' and password == 'password'
-
-@app.route('/protected')
-@auth_basic(check_credentials)
-def protected_route():
-    return jsonify({'message': 'Access granted!'})
-if __name__ == '__main__':
-    app.run(debug=True)
+        def inner(request):
+            auth = request.headers.get('Authorization')
+            if not auth:
+                return (401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+            try:
+                user, password = auth.split(' ')[1].decode('base64').split(':')
+            except:
+                return (401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+            if not check_func(user, password):
+                return (401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+            return handler(request)
+        return inner
+    return decorator

@@ -5,6 +5,6 @@ def parse_range_header(header: str, maxlen: int) -> tuple[int, int] | None:
         start, end = map(int, header[6:].split('-'))
     except ValueError:
         return None
-    if start < 0 or end >= maxlen or start > end:
+    if start < 0 or end >= maxlen or end < start:
         return None
     return (start, end)

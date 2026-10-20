@@ -2,11 +2,15 @@ import ast
 import glob
 import os
 import re
+import sys
+
+# The progress messages use ✓, which the default Windows console encoding cannot print.
+sys.stdout.reconfigure(encoding="utf-8")
 
 
 # ==================== TARGET CONFIGURATION ====================
 # Set to True to clean ONLY the target files
-TARGET_ONLY = True
+TARGET_ONLY = False
 
 # Matches any model folder containing 'qwen' (e.g. 'qwen2.5-coder_32b')
 TARGET_MODEL_KEYWORD = "qwen"
@@ -111,6 +115,9 @@ class DocstringRemover(ast.NodeTransformer):
         ):
             node.body.pop(0)
 
+            if not node.body:
+                node.body.append(ast.Pass())
+
         return node
 
     def visit_FunctionDef(self, node):
@@ -183,8 +190,8 @@ for filepath in all_files:
         python_files.append(filepath)
 
 print(
-    f"Cleaning {len(python_files)} selected target files for Qwen model"
-    " outputs..."
+    f"Cleaning {len(python_files)} model output files"
+    "..."
 )
 
 for raw_path in python_files:
@@ -206,4 +213,4 @@ for raw_path in python_files:
 
     print(f" [✓] Cleaned: {rel_path}")
 
-print("\n✓ Selective Qwen cleaning complete!")
+print("\n✓ Cleaning complete!")

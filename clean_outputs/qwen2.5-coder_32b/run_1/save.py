@@ -1,23 +1,19 @@
 import os
 import shutil
 
-class FileStreamHandler:
-
-    def __init__(self, file_stream, filename):
-        self.file_stream = file_stream
-        self.filename = filename
-
-    def save(self, destination, overwrite: bool=False, chunk_size: int=65536):
+def save(destination, overwrite: bool=False, chunk_size: int=65536):
+    try:
+        file_stream = open(__file__, 'rb')
         if os.path.isdir(destination):
-            full_path = os.path.join(destination, self.filename)
-        else:
-            full_path = destination
-        if os.path.exists(full_path) and (not overwrite):
-            raise FileExistsError(f'The file {full_path} already exists and overwrite is set to False.')
-        with open(full_path, 'wb') as output_file:
+            filename = os.path.basename(__file__)
+            destination = os.path.join(destination, filename)
+        if os.path.exists(destination) and (not overwrite):
+            raise FileExistsError(f"File '{destination}' already exists and overwrite is False.")
+        with open(destination, 'wb') as f:
             while True:
-                chunk = self.file_stream.read(chunk_size)
+                chunk = file_stream.read(chunk_size)
                 if not chunk:
                     break
-                output_file.write(chunk)
-        print(f'File saved successfully at {full_path}')
+                f.write(chunk)
+    finally:
+        file_stream.close()

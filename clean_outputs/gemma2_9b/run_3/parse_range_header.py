@@ -1,13 +1,10 @@
 def parse_range_header(header: str, maxlen: int) -> tuple[int, int] | None:
+    if not header.startswith('bytes='):
+        return None
     try:
-        _, start_end = header.split('=')
-        start, end = map(int, start_end.split('-'))
+        start, end = map(int, header[6:].split('-'))
     except ValueError:
         return None
-    if start < 0:
-        return None
-    if end >= maxlen:
-        return None
-    if end < start:
+    if start < 0 or end >= maxlen or end < start:
         return None
     return (start, end)

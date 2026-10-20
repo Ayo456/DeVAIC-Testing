@@ -1,20 +1,17 @@
 import base64
-import re
 
-def parse_auth(header: str) -> tuple:
+def parse_auth(header: str):
     if not isinstance(header, str):
         return None
-    match = re.match('^\\s*Authorization:\\s*(\\w+)\\s+(.+)$', header, re.IGNORECASE)
-    if not match:
+    parts = header.split(' ', 1)
+    if len(parts) != 2:
         return None
-    scheme = match.group(1)
-    parameter = match.group(2)
+    scheme, param = parts
     if scheme.lower() == 'basic':
         try:
-            decoded_bytes = base64.b64decode(parameter)
-            decoded_str = decoded_bytes.decode('utf-8')
-            user, password = decoded_str.split(':', 1)
+            decoded = base64.b64decode(param).decode('utf-8')
+            user, password = decoded.split(':', 1)
             return (user, password)
-        except (base64.binascii.Error, ValueError):
+        except (base64.binascii.Error, UnicodeDecodeError, ValueError):
             return None
-    return (scheme, parameter)
+    return (scheme, param)

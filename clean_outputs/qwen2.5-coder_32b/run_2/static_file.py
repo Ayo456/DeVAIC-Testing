@@ -1,22 +1,18 @@
-from flask import Flask, send_from_directory, abort
 import os
 import mimetypes
-app = Flask(__name__)
+from http import HTTPStatus
+from pathlib import Path
+from wsgiref.util import FileWrapper
 
 def static_file(filename: str, root: str, mimetype='auto', download=False):
-    full_path = os.path.join(root, filename)
-    if not os.path.commonpath([os.path.abspath(root), os.path.abspath(full_path)]) == os.path.abspath(root):
-        abort(403)
-    if not os.path.isfile(full_path):
-        abort(404)
-    if mimetype == 'auto':
-        mimetype, _ = mimetypes.guess_type(filename)
-    as_attachment = download
-    return send_from_directory(root, filename, mimetype=mimetype, as_attachment=as_attachment, download_name=filename)
-
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    root = '/path/to/your/static/files'
-    return static_file(filename, root)
-if __name__ == '__main__':
-    app.run(debug=True)
+    root_path = Path(root).resolve()
+    file_path = (root_path / filename).resolve()
+    if not file_path.is_relative_to(root_path) or not file_path.is_file():
+        raise HTTPStatus(403 if file_path.is_relative_to(root_path) else 404)
+    content_type, _ = mimetypes.guess_type(str(file_path))
+    if mimetype != 'auto':
+        content_type = mimetype
+    headers = {'Content-Type': content_type or 'application/octet-stream', 'Content-Length': str(file_path.stat().st_size)}
+    if download:
+        headers['Content-Disposition'] = f'attachment; filename="{file_path.name}"'
+    return (FileWrapper(open(file_path, 'rb')), headers)

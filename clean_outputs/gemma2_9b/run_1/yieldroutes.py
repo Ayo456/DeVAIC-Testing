@@ -1,9 +1,6 @@
 def yieldroutes(func):
-    if hasattr(func, '__closure__'):
-        for cell in func.__closure__:
-            if hasattr(cell.cell_contents, '__call__'):
-                yield from yieldroutes(cell.cell_contents)
-    elif hasattr(func, 'inner'):
-        yield from yieldroutes(func.inner)
-    else:
+    if hasattr(func, '__call__'):
+        for attr in dir(func):
+            if callable(getattr(func, attr)) and attr != '__call__':
+                yield from yieldroutes(getattr(func, attr))
         yield func

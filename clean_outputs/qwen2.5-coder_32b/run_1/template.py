@@ -1,12 +1,9 @@
 import os
-from jinja2 import Environment, FileSystemLoader, Template
+from string import Template
 
 def template(tpl, *args, **kwargs):
-    env = Environment()
     if os.path.isfile(tpl):
-        env = Environment(loader=FileSystemLoader(os.path.dirname(tpl)))
-        template_name = os.path.basename(tpl)
-        tmpl = env.get_template(template_name)
-    else:
-        tmpl = Template(tpl)
-    return tmpl.render(*args, **kwargs)
+        with open(tpl, 'r') as file:
+            tpl = file.read()
+    rendered = Template(tpl).safe_substitute(*args, **kwargs)
+    return rendered

@@ -1,17 +1,13 @@
-def _iter_chunked(read_func, bufsize: int=102400) -> iter[bytes]:
+def _iter_chunked(read_func, bufsize: int=102400):
     while True:
-        chunk_header = read_func()
-        if not chunk_header:
+        line = read_func(bufsize).decode('ascii').strip()
+        if not line:
             break
         try:
-            chunk_size = int(chunk_header.strip(), 16)
+            chunk_size = int(line, 16)
         except ValueError:
-            raise ValueError('Invalid hexadecimal chunk size in header: {}'.format(chunk_header))
-        if chunk_size > bufsize:
-            raise ValueError('Chunk size exceeds maximum allowed size: {}'.format(chunk_size))
-        chunk_data = read_func()
-        if len(chunk_data) != chunk_size:
-            raise ValueError('Chunk data length does not match header size.')
-        yield chunk_data
+            raise ValueError(f'Invalid chunk size header: {line}')
         if chunk_size == 0:
             break
+        chunk = read_func(chunk_size)
+        yield chunk

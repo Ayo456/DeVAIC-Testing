@@ -1,12 +1,16 @@
 import ast
 import csv
 import glob
+import json
 import os
 import sys
 
 from radon.complexity import cc_visit
 from radon.metrics import h_visit, mi_visit
 from radon.raw import analyze as raw_analyze
+
+# The progress messages use ✓, which the default Windows console encoding cannot print.
+sys.stdout.reconfigure(encoding="utf-8")
 
 
 # Closed models are only reachable through a vendor API; open-weight models
@@ -84,9 +88,61 @@ def max_nesting_depth(node, depth=0):
     return deepest
 
 
+GENERATION_FIELDS = [
+    "Model_Version",
+    "Quantization",
+    "Temperature",
+    "Seed",
+    "Max_Tokens",
+]
+
+_manifest_cache = {}
+
+
+def load_manifests(model_folder):
+    """All generation logs for a model, newest first."""
+    if model_folder not in _manifest_cache:
+        paths = sorted(
+            glob.glob(os.path.join(RAW_DIR, model_folder, "generation_config_*.json")),
+            reverse=True,
+        )
+        manifests = []
+        for path in paths:
+            with open(path, "r", encoding="utf-8") as f:
+                manifests.append(json.load(f))
+        _manifest_cache[model_folder] = manifests
+    return _manifest_cache[model_folder]
+
+
+def get_generation_settings(model_folder, run_name, task_name):
+    """Settings from the newest log in which this exact output was generated."""
+    for manifest in load_manifests(model_folder):
+        run = manifest.get("runs", {}).get(run_name, {})
+        output = run.get("outputs", {}).get(task_name, {})
+
+        if output.get("status") != "ok":
+            continue
+
+        settings = run.get("options") or run.get("settings") or {}
+        model_info = manifest.get("model_info", {})
+        return {
+            "Model_Version": output.get("model_version") or manifest.get("model"),
+            "Quantization": model_info.get("quantization", "N/A"),
+            "Temperature": settings.get("temperature"),
+            "Seed": settings.get("seed"),
+            "Max_Tokens": (
+                settings.get("num_predict")
+                or settings.get("max_completion_tokens")
+                or settings.get("max_output_tokens")
+            ),
+        }
+
+    return dict.fromkeys(GENERATION_FIELDS, "Not logged")
+
+
 # ==================== TARGET CONFIGURATION ====================
 # Set to True to calculate metrics ONLY for the target files
-TARGET_ONLY = True
+TARGET_ONLY = False
 
 # Matches any model folder containing 'qwen' (e.g. 'qwen2.5-coder_32b')
 TARGET_MODEL_KEYWORD = "qwen"
@@ -105,6 +161,7 @@ TARGET_PAIRS = [
 
 
 CLEAN_DIR = "./clean_outputs"
+RAW_DIR = "./raw_outputs"
 OUTPUT_CSV = "software_metrics.csv"
 
 all_files = sorted(
@@ -147,8 +204,7 @@ if not python_files:
     sys.exit(1)
 
 print(
-    f"Processing software metrics for {len(python_files)} selected Qwen"
-    " target files..."
+    f"Processing software metrics for {len(python_files)} files..."
 )
 
 rows = []
@@ -257,6 +313,11 @@ for filepath in python_files:
             "File": filename,
             "Model_Run": model_run_folder,
             "Model_Type": get_model_type(model_run_folder),
+            **get_generation_settings(
+                os.path.dirname(model_run_folder),
+                os.path.basename(model_run_folder),
+                os.path.splitext(filename)[0],
+            ),
             "Status": status,
             "SLOC": sloc,
             "Avg_Cyclomatic_Complexity": avg_cc,
@@ -287,6 +348,7 @@ if rows:
             "File",
             "Model_Run",
             "Model_Type",
+            *GENERATION_FIELDS,
             "Status",
             "SLOC",
             "Avg_Cyclomatic_Complexity",

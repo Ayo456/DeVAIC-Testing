@@ -1,19 +1,13 @@
-import base64
+from datetime import datetime
 
-def parse_auth(header: str) -> tuple:
-    if not isinstance(header, str):
-        return None
-    parts = header.split(' ', 1)
-    if len(parts) != 2:
-        return None
-    scheme, parameter = parts
-    if scheme.lower() == 'basic':
+def parse_date(ims: str) -> int:
+    try:
+        return int(datetime.strptime(ims, '%a, %d %b %Y %H:%M:%S GMT').timestamp())
+    except ValueError:
         try:
-            encoded_userpass = parameter.strip()
-            decoded_userpass = base64.b64decode(encoded_userpass).decode('ascii')
-            user, password = decoded_userpass.split(':', 1)
-            return (user, password)
-        except:
-            return None
-    else:
-        return (scheme, parameter)
+            return int(datetime.strptime(ims, '%a, %d %b %Y %H:%M:%S').timestamp())
+        except ValueError:
+            try:
+                return int(datetime.strptime(ims, '%a %d %b %Y').timestamp())
+            except ValueError:
+                return None

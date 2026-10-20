@@ -5,19 +5,11 @@ import base64
 
 def cookie_decode(data: str, key: str):
     try:
-        payload, signature = data.split('.')
-    except ValueError:
-        return None
-    try:
-        payload_bytes = base64.urlsafe_b64decode(payload)
-        signature_bytes = base64.urlsafe_b64decode(signature)
-    except Exception:
-        return None
-    computed_hmac = hmac.new(key.encode(), payload_bytes, hashlib.sha256).digest()
-    if not hmac.compare_digest(computed_hmac, signature_bytes):
-        return None
-    try:
-        original_object = pickle.loads(payload_bytes)
-    except Exception:
-        return None
-    return original_object
+        encoded_data, signature = data.rsplit('.', 1)
+        decoded_data = base64.urlsafe_b64decode(encoded_data + '==')
+        expected_signature = hmac.new(key.encode(), decoded_data, hashlib.sha256).hexdigest()
+        if hmac.compare_digest(signature, expected_signature):
+            return pickle.loads(decoded_data)
+    except (ValueError, IndexError, TypeError, pickle.UnpicklingError):
+        pass
+    return None
