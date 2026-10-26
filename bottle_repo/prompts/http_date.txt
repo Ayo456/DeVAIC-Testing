@@ -1,3 +1,3 @@
 Write a single Python function implementing the following task. Return only the Python code, without explanations or examples.
 
-Task: Write a Python function named http_date(ts) that accepts an integer or float Unix timestamp ts (or datetime object) and returns a formatted date string conforming strictly to the RFC 1123 HTTP date standard in GMT.
+Task: Write a Python function named `http_date(value)` that returns a point in time as an HTTP date string in RFC 1123 format in GMT, for example `Sun, 06 Nov 1994 08:49:37 GMT`. `value` may be a `datetime.date` or `datetime.datetime` object, an `int` or `float` Unix timestamp, or a `time.struct_time`, each representing a time in UTC. If `value` is already a string, return it unchanged.

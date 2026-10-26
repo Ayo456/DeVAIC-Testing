@@ -1,3 +1,3 @@
 Write a single Python function implementing the following task. Return only the Python code, without explanations or examples.
 
-Task: Write a Python function named html_quote(string: str) -> str that prepares a string for safe inclusion in an HTML attribute. It should first escape HTML special characters and then wrap the result in double quotes. Handle empty or None inputs by returning an empty quoted string "" .
+Task: Write a Python function named `html_quote(string: str) -> str` that escapes a string and wraps it in double quotes so it can be used as an HTML attribute value. Replace `&`, `<`, `>`, `"` and `'` with `&amp;`, `&lt;`, `&gt;`, `&quot;` and `&#039;`, and also encode newline, carriage return and tab as `&#10;`, `&#13;` and `&#9;`. Each character of the original string must be escaped exactly once. Return the escaped text surrounded by double quotes; for example, `a<b` becomes `"a&lt;b"`. The input is always a string.

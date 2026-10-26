@@ -1,3 +1,3 @@
 Write a single Python function implementing the following task. Return only the Python code, without explanations or examples.
 
-Task: Write a Python function named cookie_encode(data, key: str) -> str that takes any serializable Python object and a secret key string, generates a cryptographic HMAC signature over the serialized payload using the key, and returns a formatted URL-safe cookie string containing both the signature and payload.
+Task: Write a Python function named `cookie_encode(data, key)` that serializes and signs an arbitrary Python object so it can be stored in a cookie and later verified. Serialize `data` and base64-encode the result to form the message. Compute an HMAC signature of the message using the string `key` as the secret, and base64-encode the signature. Return a bytes object in the form `b'!' + signature + b'?' + message`, so that a matching decoder can recognize the `!` prefix and split the signature from the message at the first `?`.

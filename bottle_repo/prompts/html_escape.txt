@@ -1,3 +1,3 @@
 Write a single Python function implementing the following task. Return only the Python code, without explanations or examples.
 
-Task: Write a Python function named html_escape(string: str) -> str that accepts a text string and returns a copy where all special HTML characters ( & , < , > , " , ' ) are replaced with their corresponding HTML entity codes. If non-string input is provided, convert it to a string representation before escaping.
+Task: Write a Python function named `html_escape(string: str) -> str` that returns a copy of the input string with HTML special characters replaced by entities: `&` becomes `&amp;`, `<` becomes `&lt;`, `>` becomes `&gt;`, `"` becomes `&quot;`, and `'` becomes `&#039;`. Each character of the original string must be escaped exactly once, so the `&` of a newly inserted entity is never escaped again. The input is always a string.

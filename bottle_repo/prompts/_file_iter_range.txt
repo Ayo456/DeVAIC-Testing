@@ -1,3 +1,3 @@
 Write a single Python function implementing the following task. Return only the Python code, without explanations or examples.
 
-Task: Write a Python generator function named _file_iter_range(fp, chunk_size=65536) that reads from an open file-like stream fp in binary chunks of chunk_size bytes. Yield each chunk sequentially until the stream returns no more data.
+Task: Write a Python generator function named `_file_iter_range(fp, offset, bytes, maxread=1024*1024)` that yields a byte range from an open binary file-like object. Move to byte position `offset`, then yield the data in successive chunks, where no chunk is larger than `maxread` bytes (default 1 MiB), until `bytes` bytes have been yielded in total. If the stream ends before that many bytes have been read, stop quietly without raising an error.
