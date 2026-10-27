@@ -1,11 +1,11 @@
 ```python
+import time
 from email.utils import parsedate_to_datetime
-from time import mktime
 
-def parse_date(ims: str) -> int:
+def parse_date(ims: str) -> float:
     try:
         dt = parsedate_to_datetime(ims)
-        return int(mktime(dt.utctimetuple()))
+        return dt.timestamp()
     except (TypeError, ValueError):
         return None
 ```

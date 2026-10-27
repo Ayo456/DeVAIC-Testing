@@ -1,11 +1,50 @@
 ```python
-def template(tpl, *args, **kwargs):
-    import os
-    import jinja2
-    if os.path.exists(tpl):
-        env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(tpl)))
-        template = env.get_template(os.path.basename(tpl))
+def template(*args, **kwargs):
+    from os.path import join
+    from hashlib import sha1
+    from functools import reduce
+    from operator import or_
+    from collections import defaultdict
+
+    global TEMPLATES, TEMPLATE_PATH, DEBUG, SimpleTemplate, abort
+
+    template_adapter = kwargs.pop('template_adapter', SimpleTemplate)
+    template_lookup = kwargs.pop('template_lookup', TEMPLATE_PATH)
+    template_settings = kwargs.pop('template_settings', {})
+
+    template_arg = args[0]
+    variables = reduce(or_, (defaultdict(lambda: None, d) for d in args[1:]), defaultdict(lambda: None, kwargs))
+
+    if isinstance(template_arg, str):
+        if '\n' in template_arg or any(c in template_arg for c in '{}%$'):
+            source = template_arg
+            template_key = (tuple(template_lookup), source)
+        else:
+            name = template_arg
+            template_key = (tuple(template_lookup), name)
     else:
-        template = jinja2.Template(tpl)
-    return template.render(*args, **kwargs)
+        source = template_arg
+        template_key = (tuple(template_lookup), id(source))
+
+    if DEBUG or template_key not in TEMPLATES:
+        if isinstance(template_arg, str) and '\n' not in template_arg and not any(c in template_arg for c in '{}%$'):
+            for path in template_lookup:
+                try:
+                    with open(join(path, template_arg)) as f:
+                        source = f.read()
+                        break
+                except FileNotFoundError:
+                    pass
+            else:
+                abort(500, f'Template ({template_arg}) not found')
+            template = template_adapter(source=source, lookup=template_lookup, **template_settings)
+        else:
+            template = template_adapter(source=source, lookup=template_lookup, **template_settings) if isinstance(template_arg, str) else template_arg
+            if hasattr(template, 'prepare'):
+                template.prepare(**template_settings)
+        TEMPLATES[template_key] = template
+    else:
+        template = TEMPLATES[template_key]
+
+    return template.render(variables)
 ```

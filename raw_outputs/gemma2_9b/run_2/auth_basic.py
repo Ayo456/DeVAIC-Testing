@@ -1,19 +1,13 @@
 ```python
-def auth_basic(check_func):
-  def decorator(handler):
-    def inner(request):
-      auth = request.headers.get('Authorization')
-      if auth:
-        try:
-          user, password = auth.split(' ')[1].decode('base64').split(':')
-          if check_func(user, password):
-            return handler(request)
-          else:
-            return 'HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm="Restricted Area"\r\n'
-        except:
-          return 'HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm="Restricted Area"\r\n'
-      else:
-        return 'HTTP/1.1 401 Unauthorized\r\nWWW-Authenticate: Basic realm="Restricted Area"\r\n'
-    return inner
-  return decorator
+def auth_basic(check, realm="private", text="Access denied"):
+    def decorator(handler):
+        def wrapped(*args, **kwargs):
+            if request.auth is None:
+                return HTTPError(401, text).add_header("WWW-Authenticate", f"Basic realm=\"{realm}\"")
+            user, password = request.auth
+            if not check(user, password):
+                return HTTPError(401, text).add_header("WWW-Authenticate", f"Basic realm=\"{realm}\"")
+            return handler(*args, **kwargs)
+        return wrapped
+    return decorator
 ```

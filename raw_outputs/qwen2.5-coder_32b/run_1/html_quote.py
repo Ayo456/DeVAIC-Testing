@@ -1,7 +1,15 @@
 ```python
 def html_quote(string: str) -> str:
-    if not string:
-        return '""'
-    escaped = string.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
-    return f'"{escaped}"'
+    replacements = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+        '\n': '&#10;',
+        '\r': '&#13;',
+        '\t': '&#9;'
+    }
+    escaped_string = ''.join(replacements.get(char, char) for char in string)
+    return f'"{escaped_string}"'
 ```

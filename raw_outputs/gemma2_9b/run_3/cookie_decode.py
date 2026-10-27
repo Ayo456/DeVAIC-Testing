@@ -1,15 +1,23 @@
 ```python
-import json
-from hashlib import sha256
+import base64
+from hashlib import hmac
 
-def cookie_decode(data: str, key: str):
+def cookie_decode(data, key):
+  if isinstance(data, str):
+    data = data.encode()
+  parts = data.split(b'?', 1)
+  if len(parts) != 2:
+    return None
+  message = parts[1]
+  signature = parts[0]
   try:
-    header, payload, signature = data.split('.')
-    computed_signature = sha256(payload.encode()).hexdigest()
-    if computed_signature == signature:
-      return json.loads(payload)
-    else:
-      return None
+    decoded_message = base64.b64decode(message)
   except:
-    return None 
+    return None
+  computed_signature = hmac(key.encode(), message, digestmod='sha256').digest()
+  try:
+    decoded_signature = base64.b64decode(signature)
+  except:
+    return None
+  return None if hmac(key.encode(), decoded_message, digestmod='sha256').digest() != decoded_signature else eval(decoded_message.decode()) 
 ```

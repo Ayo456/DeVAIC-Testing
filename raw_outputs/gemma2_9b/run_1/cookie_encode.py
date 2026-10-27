@@ -1,10 +1,10 @@
 ```python
-import hmac
 import base64
-from functools import partial
+import hmac
 
-def cookie_encode(data, key: str) -> str:
-  serialized_data = base64.b64encode(str(data).encode()).decode()
-  signature = hmac.new(key.encode(), serialized_data.encode(), 'sha256').digest()
-  return f"{serialized_data}.{base64.b64encode(signature).decode()}" 
+def cookie_encode(data, key):
+  import pickle
+  message = base64.b64encode(pickle.dumps(data))
+  signature = base64.b64encode(hmac.new(key.encode(), message, 'sha256').digest())
+  return b'!' + signature + b'?' + message 
 ```

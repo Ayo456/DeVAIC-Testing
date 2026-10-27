@@ -1,0 +1,386 @@
+{
+  "model": "gemma2:9b",
+  "model_info": {
+    "digest": "ff02c3702f322b9e075e9568332d96c0a7028002f1a5a056e0a6784320a4db0b",
+    "quantization": "Q4_0",
+    "parameter_size": "9.2B",
+    "family": "gemma2",
+    "format": "gguf"
+  },
+  "environment": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "cpu": "AMD Ryzen 7 9700X 8-Core Processor",
+    "gpus": [
+      {
+        "name": "AMD Radeon(TM) Graphics",
+        "memory_gb": 0.5,
+        "driver": "32.0.21045.16010"
+      },
+      {
+        "name": "AMD Radeon RX 9060 XT",
+        "memory_gb": 15.9,
+        "driver": "32.0.32015.7029"
+      }
+    ],
+    "ollama_server_version": "0.40.11",
+    "ollama_python_version": "0.6.3",
+    "python_version": "3.14.7"
+  },
+  "started_at": "2026-10-26T19:45:55",
+  "prompts_dir": "bottle_repo\\prompts",
+  "num_repetitions": 3,
+  "runs": {
+    "run_1": {
+      "options": {
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "top_k": 40,
+        "num_predict": 2048,
+        "num_ctx": 4096,
+        "seed": 43
+      },
+      "outputs": {
+        "_file_iter_range": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 88
+        },
+        "_iter_chunked": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 226
+        },
+        "_lscmp": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 50
+        },
+        "_parse_qsl": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 78
+        },
+        "auth_basic": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 143
+        },
+        "cookie_decode": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 182
+        },
+        "cookie_encode": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 93
+        },
+        "html_escape": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 60
+        },
+        "html_quote": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 90
+        },
+        "http_date": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 103
+        },
+        "parse_auth": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 108
+        },
+        "parse_date": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 65
+        },
+        "parse_range_header": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 149
+        },
+        "path_shift": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 212
+        },
+        "redirect": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 88
+        },
+        "save": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 176
+        },
+        "static_file": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 547
+        },
+        "template": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 479
+        },
+        "view": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 127
+        },
+        "yieldroutes": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 125
+        }
+      },
+      "gpu_offload": {
+        "model_size_bytes": 6267579923,
+        "vram_bytes": 6267579923,
+        "percent_on_gpu": 100.0
+      }
+    },
+    "run_2": {
+      "options": {
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "top_k": 40,
+        "num_predict": 2048,
+        "num_ctx": 4096,
+        "seed": 44
+      },
+      "outputs": {
+        "_file_iter_range": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 91
+        },
+        "_iter_chunked": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 230
+        },
+        "_lscmp": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 50
+        },
+        "_parse_qsl": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 78
+        },
+        "auth_basic": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 143
+        },
+        "cookie_decode": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 211
+        },
+        "cookie_encode": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 93
+        },
+        "html_escape": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 61
+        },
+        "html_quote": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 95
+        },
+        "http_date": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 132
+        },
+        "parse_auth": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 122
+        },
+        "parse_date": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 65
+        },
+        "parse_range_header": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 164
+        },
+        "path_shift": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 212
+        },
+        "redirect": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 103
+        },
+        "save": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 273
+        },
+        "static_file": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 557
+        },
+        "template": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 293
+        },
+        "view": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 127
+        },
+        "yieldroutes": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 136
+        }
+      },
+      "gpu_offload": {
+        "model_size_bytes": 6267579923,
+        "vram_bytes": 6267579923,
+        "percent_on_gpu": 100.0
+      }
+    },
+    "run_3": {
+      "options": {
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "top_k": 40,
+        "num_predict": 2048,
+        "num_ctx": 4096,
+        "seed": 45
+      },
+      "outputs": {
+        "_file_iter_range": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 91
+        },
+        "_iter_chunked": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 192
+        },
+        "_lscmp": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 50
+        },
+        "_parse_qsl": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 78
+        },
+        "auth_basic": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 143
+        },
+        "cookie_decode": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 211
+        },
+        "cookie_encode": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 96
+        },
+        "html_escape": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 60
+        },
+        "html_quote": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 95
+        },
+        "http_date": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 103
+        },
+        "parse_auth": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 117
+        },
+        "parse_date": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 65
+        },
+        "parse_range_header": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 149
+        },
+        "path_shift": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 212
+        },
+        "redirect": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 109
+        },
+        "save": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 270
+        },
+        "static_file": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 567
+        },
+        "template": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 319
+        },
+        "view": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 121
+        },
+        "yieldroutes": {
+          "status": "ok",
+          "done_reason": "stop",
+          "output_tokens": 108
+        }
+      },
+      "gpu_offload": {
+        "model_size_bytes": 6267579923,
+        "vram_bytes": 6267579923,
+        "percent_on_gpu": 100.0
+      }
+    }
+  },
+  "finished_at": "2026-10-26T19:50:01"
+}

@@ -1,16 +1,44 @@
 ```python
-def static_file(filename: str, root: str, mimetype='auto', download=False):
-  filepath = os.path.join(root, filename)
-  if not os.path.isfile(filepath) or os.path.dirname(filepath) != root:
-    raise HTTPException(404)
-  
-  with open(filepath, 'rb') as f:
-    content = f.read()
-    length = len(content)
-  
-  headers = {'Content-Type': mimetype or mimetypes.guess_type(filename)[0], 'Content-Length': str(length)}
-  if download:
-    headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-  
-  return Response(content, headers=headers) 
+def static_file(filename, root, mimetype='auto', download=False, charset='UTF-8'):
+  filename = filename.strip("/\\")
+  resolved_path = os.path.join(root, filename)
+  if not resolved_path.startswith(root):
+    return HTTPError(403)
+  if not os.path.isfile(resolved_path) or not os.access(resolved_path, os.R_OK):
+    return HTTPError(404)
+  try:
+    with open(resolved_path, 'rb') as f:
+      file_size = os.path.getsize(resolved_path)
+      last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(resolved_path)).strftime('%a, %d %b %Y %H:%M:%S GMT')
+      if request.method == 'HEAD':
+        response = HTTPResponse(status=200, headers={
+          'Content-Type': mimetype,
+          'Content-Length': str(file_size),
+          'Last-Modified': last_modified,
+          'Accept-Ranges': 'bytes'
+        })
+      else:
+        if download:
+          filename = os.path.basename(filename) if download is True else download
+          response = HTTPResponse(status=200, headers={
+            'Content-Type': mimetype,
+            'Content-Disposition': f'attachment; filename="{filename}"',
+            'Content-Length': str(file_size),
+            'Last-Modified': last_modified,
+            'Accept-Ranges': 'bytes'
+          }, body=f.read())
+        else:
+          response = HTTPResponse(status=200, headers={
+            'Content-Type': mimetype,
+            'Content-Length': str(file_size),
+            'Last-Modified': last_modified,
+            'Accept-Ranges': 'bytes'
+          }, body=f.read())
+      if request.headers.get('If-Modified-Since') == last_modified:
+        return HTTPResponse(status=304, headers={
+          'Date': datetime.datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
+        })
+      return response
+  except Exception as e:
+    return HTTPError(500, f'Error serving file: {e}')
 ```

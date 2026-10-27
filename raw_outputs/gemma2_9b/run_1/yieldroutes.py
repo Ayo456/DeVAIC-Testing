@@ -1,8 +1,12 @@
 ```python
 def yieldroutes(func):
-  if hasattr(func, '__call__'):
-    for attr in dir(func):
-      if callable(getattr(func, attr)) and attr != '__call__':
-        yield from yieldroutes(getattr(func, attr))
-    yield func
+  name = func.__name__.replace("__", "/")
+  args = func.__code__.co_varnames[:func.__code__.co_argcount]
+  yield "/" + name
+  for arg in args:
+    if arg not in func.__defaults__:
+      yield "/" + name + "/" + arg
+  for arg in args:
+    if arg in func.__defaults__:
+      yield "/" + name + "/" + "/".join(arg for arg in args[:args.index(arg)]) + "/" + arg 
 ```

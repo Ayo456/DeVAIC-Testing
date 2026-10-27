@@ -1,17 +1,11 @@
 ```python
-def parse_auth(header: str) -> tuple:
-  if not isinstance(header, str):
-    return None
-  parts = header.split(" ", 1)
-  if len(parts) != 2:
-    return None
-  scheme, parameter = parts
+def parse_auth(header: str) -> tuple[str, str] | None:
+  scheme, credentials = header.split(" ", 1) if " " in header else (None, None)
   if scheme.lower() == "basic":
     try:
-      decoded = base64.b64decode(parameter).decode("ascii")
-      user, password = decoded.split(":", 1)
-      return (user, password)
+      user, password = base64.b64decode(credentials).decode().split(":", 1)
+      return user, password
     except:
       return None
-  return (scheme, parameter) 
+  return None
 ```

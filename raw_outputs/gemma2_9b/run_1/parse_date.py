@@ -1,15 +1,10 @@
 ```python
 from datetime import datetime
 
-def parse_date(ims: str) -> int:
+def parse_date(ims: str) -> float | None:
   try:
-    return int(datetime.strptime(ims, "%a, %d %b %Y %H:%M:%S GMT").timestamp())
+    dt = datetime.fromisoformat(ims).astimezone(datetime.utc)
+    return dt.timestamp()
   except ValueError:
-    try:
-      return int(datetime.strptime(ims, "%a, %d %b %Y %H:%M:%S").timestamp())
-    except ValueError:
-      try:
-        return int(datetime.strptime(ims, "%a %d %b %Y").timestamp())
-      except ValueError:
-        return None 
+    return None
 ```

@@ -1,23 +1,24 @@
 ```python
-import os
-import shutil
-
-def save(destination, overwrite: bool = False, chunk_size: int = 65536):
-    if hasattr(destination, 'read'):
-        file_stream = destination
-        destination = file_stream.name if not os.path.isdir(destination.name) else os.path.join(destination.name, os.path.basename(file_stream.name))
-    else:
-        file_stream = open(destination, 'rb')
-    
-    if os.path.exists(destination) and not overwrite:
-        raise FileExistsError(f"File '{destination}' already exists and overwrite is False.")
-    
-    with open(destination, 'wb') as f:
+def save(self, destination, overwrite=False, chunk_size=65536):
+    import os
+    original_position = self.file.tell()
+    try:
+        if hasattr(destination, 'write'):
+            target = destination
+        else:
+            if os.path.isdir(destination):
+                destination = os.path.join(destination, self.filename)
+            if os.path.exists(destination) and not overwrite:
+                raise IOError(f"File {destination} already exists and overwrite is False.")
+            target = open(destination, 'wb')
+        
         while True:
-            chunk = file_stream.read(chunk_size)
+            chunk = self.file.read(chunk_size)
             if not chunk:
                 break
-            f.write(chunk)
-    
-    file_stream.close()
+            target.write(chunk)
+    finally:
+        self.file.seek(original_position)
+        if not hasattr(destination, 'write'):
+            target.close()
 ```

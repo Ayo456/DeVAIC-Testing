@@ -1,15 +1,22 @@
 ```python
-def _iter_chunked(read_func, bufsize: int = 102400):
+def _iter_chunked(read, bufsize):
   while True:
-    line = read_func(bufsize).decode('ascii').strip()
-    if not line:
-      break
+    chunk_line = read(bufsize).rstrip()
+    if len(chunk_line) > bufsize or not chunk_line:
+      raise HTTPError(400, b"Invalid chunk size")
     try:
-      chunk_size = int(line, 16)
+      chunk_size = int(chunk_line, 16)
     except ValueError:
-      raise ValueError(f"Invalid chunk size header: {line}")
+      raise HTTPError(400, b"Invalid chunk size")
     if chunk_size == 0:
-      break
-    chunk = read_func(chunk_size)
-    yield chunk
-```
+      return
+    data = b''
+    while chunk_size > 0:
+      chunk = read(min(chunk_size, bufsize))
+      if not chunk:
+        raise HTTPError(400, b"Missing chunk data")
+      data += chunk
+      chunk_size -= len(chunk)
+    if read(2) != b'\r\n':
+      raise HTTPError(400, b"Missing chunk CRLF")
+    yield data```

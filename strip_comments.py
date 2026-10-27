@@ -1,3 +1,4 @@
+import argparse
 import ast
 import glob
 import os
@@ -157,6 +158,16 @@ def clean_python_code(raw_text: str) -> str:
 RAW_DIR = "./raw_outputs"
 CLEAN_DIR = "./clean_outputs"
 
+parser = argparse.ArgumentParser(
+    description="Strip Markdown, comments, and docstrings from model outputs."
+)
+parser.add_argument(
+    "--models",
+    nargs="+",
+    help="Only clean model folders whose name contains one of these (e.g. gpt).",
+)
+args = parser.parse_args()
+
 all_files = sorted(
     glob.glob(f"{RAW_DIR}/**/*.py", recursive=True)
 )
@@ -178,6 +189,9 @@ for filepath in all_files:
                 os.path.dirname(filepath)
             )
         )
+
+    if args.models and not any(m.lower() in model_folder.lower() for m in args.models):
+        continue
 
     if TARGET_ONLY:
         is_qwen = TARGET_MODEL_KEYWORD in model_folder.lower()

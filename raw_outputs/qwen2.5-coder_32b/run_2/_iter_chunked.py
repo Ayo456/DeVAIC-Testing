@@ -1,35 +1,37 @@
 ```python
-def _iter_chunked(read_func, bufsize: int = 102400):
+def _iter_chunked(read, bufsize):
     while True:
-        chunk_header = b''
+        size_line = b''
         while True:
-            byte = read_func(1)
-            if not byte:
-                raise ValueError("Unexpected end of stream while reading chunk header")
-            chunk_header += byte
-            if chunk_header.endswith(b'\r\n'):
+            chunk = read(bufsize - len(size_line))
+            if not chunk:
+                raise HTTPError(400, b'Bad Request')
+            size_line += chunk
+            if b'\r\n' in size_line:
                 break
-            if len(chunk_header) > bufsize:
-                raise ValueError("Chunk header exceeds bufsize")
+            if len(size_line) > bufsize:
+                raise HTTPError(400, b'Bad Request')
         
+        size_str, _, _ = size_line.split(b';', 1) if b';' in size_line else (size_line, b'', b'')
         try:
-            chunk_length = int(chunk_header.strip().split(b';', 1)[0], 16)
+            size = int(size_str.strip(), 16)
         except ValueError:
-            raise ValueError("Invalid hexadecimal chunk length")
+            raise HTTPError(400, b'Bad Request')
         
-        if chunk_length == 0:
-            break
+        if size == 0:
+            trailer = read(bufsize)
+            if trailer != b'\r\n':
+                raise HTTPError(400, b'Bad Request')
+            return
         
-        chunk_data = b''
-        while len(chunk_data) < chunk_length:
-            data = read_func(chunk_length - len(chunk_data))
-            if not data:
-                raise ValueError("Unexpected end of stream while reading chunk data")
-            chunk_data += data
+        while size > 0:
+            chunk = read(min(size, bufsize))
+            if not chunk:
+                raise HTTPError(400, b'Bad Request')
+            yield chunk
+            size -= len(chunk)
         
-        trailer = read_func(2)
-        if trailer != b'\r\n':
-            raise ValueError("Invalid chunk trailer")
-        
-        yield chunk_data
+        crlf = read(2)
+        if crlf != b'\r\n':
+            raise HTTPError(400, b'Bad Request')
 ```

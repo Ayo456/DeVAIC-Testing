@@ -1,5 +1,5 @@
 ```python
-def _lscmp(a: str, b: str) -> bool:
+def _lscmp(a, b):
     if len(a) != len(b):
         return False
     result = 0

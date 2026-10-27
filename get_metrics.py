@@ -1,8 +1,10 @@
+import argparse
 import ast
 import csv
 import glob
 import json
 import os
+import re
 import sys
 
 from radon.complexity import cc_visit
@@ -164,6 +166,26 @@ CLEAN_DIR = "./clean_outputs"
 RAW_DIR = "./raw_outputs"
 OUTPUT_CSV = "software_metrics.csv"
 
+parser = argparse.ArgumentParser(
+    description="Calculate software metrics for the cleaned model outputs."
+)
+parser.add_argument(
+    "--models",
+    nargs="+",
+    help=(
+        "Only measure model folders whose name contains one of these (e.g. gpt)."
+        " Rows already in the CSV for other models are kept."
+    ),
+)
+args = parser.parse_args()
+
+
+def is_selected(model_folder):
+    return not args.models or any(
+        m.lower() in model_folder.lower() for m in args.models
+    )
+
+
 all_files = sorted(
     glob.glob(f"{CLEAN_DIR}/**/*.py", recursive=True)
 )
@@ -185,6 +207,9 @@ for filepath in all_files:
                 os.path.dirname(filepath)
             )
         )
+
+    if not is_selected(model_folder):
+        continue
 
     if TARGET_ONLY:
         is_qwen = TARGET_MODEL_KEYWORD in model_folder.lower()
@@ -336,8 +361,22 @@ for filepath in python_files:
         f" [{status_flag}] {filename} ({model_run_folder}) -> Status: {status}"
     )
 
+# With --models, keep the existing rows of every model that was not re-measured.
+kept_rows = []
+
+if args.models and os.path.exists(OUTPUT_CSV):
+    with open(OUTPUT_CSV, "r", newline="", encoding="utf-8") as f:
+        kept_rows = [
+            row
+            for row in csv.DictReader(f)
+            if not is_selected(re.split(r"[\\/]", row["Model_Run"])[0])
+        ]
+
 # Write to CSV
 if rows:
+    measured_count = len(rows)
+    rows = sorted(kept_rows + rows, key=lambda row: row["Path"])
+
     with open(
         OUTPUT_CSV,
         "w",
@@ -368,7 +407,7 @@ if rows:
         writer.writeheader()
         writer.writerows(rows)
 
-print(
-    f"\n✓ Done! Metrics recorded for {len(rows)} target files in"
-    f" '{OUTPUT_CSV}'."
-)
+    print(
+        f"\n✓ Done! Metrics recorded for {measured_count} files in"
+        f" '{OUTPUT_CSV}' ({len(kept_rows)} existing rows kept)."
+    )
