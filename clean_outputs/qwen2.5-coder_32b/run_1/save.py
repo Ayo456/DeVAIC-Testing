@@ -1,19 +1,21 @@
-import os
-import shutil
-
-def save(destination, overwrite: bool=False, chunk_size: int=65536):
+def save(self, destination, overwrite=False, chunk_size=65536):
+    import os
+    original_position = self.file.tell()
     try:
-        file_stream = open(__file__, 'rb')
-        if os.path.isdir(destination):
-            filename = os.path.basename(__file__)
-            destination = os.path.join(destination, filename)
-        if os.path.exists(destination) and (not overwrite):
-            raise FileExistsError(f"File '{destination}' already exists and overwrite is False.")
-        with open(destination, 'wb') as f:
-            while True:
-                chunk = file_stream.read(chunk_size)
-                if not chunk:
-                    break
-                f.write(chunk)
+        if hasattr(destination, 'write'):
+            target = destination
+        else:
+            if os.path.isdir(destination):
+                destination = os.path.join(destination, self.filename)
+            if os.path.exists(destination) and (not overwrite):
+                raise IOError(f'File {destination} already exists and overwrite is False.')
+            target = open(destination, 'wb')
+        while True:
+            chunk = self.file.read(chunk_size)
+            if not chunk:
+                break
+            target.write(chunk)
     finally:
-        file_stream.close()
+        self.file.seek(original_position)
+        if not hasattr(destination, 'write'):
+            target.close()

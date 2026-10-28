@@ -1,6 +1,9 @@
 def yieldroutes(func):
-    if hasattr(func, '__call__'):
-        for attr in dir(func):
-            if attr != '__call__' and hasattr(getattr(func, attr), '__call__'):
-                yield from yieldroutes(getattr(func, attr))
-        yield func
+    name = func.__name__.replace('__', '/')
+    args = func.__code__.co_varnames[:func.__code__.co_argcount]
+    yield ('/' + name)
+    for i, arg in enumerate(args):
+        if func.__defaults__[i] is None:
+            yield ('/' + name + '/' + arg)
+        else:
+            yield ('/' + name + '/' + '/'.join(args[:i + 1]))

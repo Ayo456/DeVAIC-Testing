@@ -23,7 +23,11 @@ MODEL_TYPES = {
     "chatgpt": "Closed",
     "gpt": "Closed",
     "gemini": "Closed",
+    "human": "Human",
 }
+
+# Folder in clean_outputs/ that holds the cleaned original Bottle functions.
+HUMAN_FOLDER = "human_code"
 
 SYNTAX_ERROR = "Syntax Error"
 PARSE_ERROR = "Parse Error"
@@ -118,6 +122,11 @@ def load_manifests(model_folder):
 
 def get_generation_settings(model_folder, run_name, task_name):
     """Settings from the newest log in which this exact output was generated."""
+    # Human code has no generation settings; web-interface outputs (e.g.
+    # gemini-web) have no generation log, so their settings are unknown.
+    if model_folder == HUMAN_FOLDER or not load_manifests(model_folder):
+        return dict.fromkeys(GENERATION_FIELDS, "N/A")
+
     for manifest in load_manifests(model_folder):
         run = manifest.get("runs", {}).get(run_name, {})
         output = run.get("outputs", {}).get(task_name, {})
@@ -198,6 +207,10 @@ for filepath in all_files:
 
     if len(parts) >= 3:
         model_folder, parent_run, filename = parts[0], parts[1], parts[2]
+
+    elif len(parts) == 2:
+        # Folders without runs, such as the human baseline (human_code/<file>.py).
+        model_folder, parent_run, filename = parts[0], "", parts[1]
 
     else:
         filename = os.path.basename(filepath)
@@ -339,7 +352,7 @@ for filepath in python_files:
             "Model_Run": model_run_folder,
             "Model_Type": get_model_type(model_run_folder),
             **get_generation_settings(
-                os.path.dirname(model_run_folder),
+                model_run_folder.split(os.sep)[0],
                 os.path.basename(model_run_folder),
                 os.path.splitext(filename)[0],
             ),
@@ -376,6 +389,14 @@ if args.models and os.path.exists(OUTPUT_CSV):
 if rows:
     measured_count = len(rows)
     rows = sorted(kept_rows + rows, key=lambda row: row["Path"])
+
+    # Values that do not apply (e.g. quantization for API models, generation
+    # settings for human code) are left blank so spreadsheets read the
+    # numeric columns as numbers.
+    rows = [
+        {key: "" if value == "N/A" else value for key, value in row.items()}
+        for row in rows
+    ]
 
     with open(
         OUTPUT_CSV,

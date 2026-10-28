@@ -1,0 +1,29 @@
+{
+  "provider": "gemini",
+  "requested_model": "gemini-2.5-flash",
+  "environment": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "python_version": "3.14.7",
+    "sdk": "google-genai",
+    "sdk_version": "2.31.0"
+  },
+  "started_at": "2026-10-28T02:31:05",
+  "prompts_dir": "bottle_repo\\prompts",
+  "num_repetitions": 3,
+  "runs": {
+    "run_1": {
+      "settings": {
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "top_k": 40,
+        "max_output_tokens": 2048,
+        "seed": 43,
+        "thinking_budget": 0
+      },
+      "outputs": {}
+    }
+  },
+  "stopped_early": "ClientError: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'API key not valid. Please pass a valid API key.', 'status': 'INVALID_ARGUMENT', 'details': [{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'API_KEY_INVALID', 'domain': 'googleapis.com', 'metadata': {'service': 'generativelanguage.googleapis.com'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'API key not valid. Please pass a valid API key.'}]}}",
+  "answered_by_model_versions": [],
+  "finished_at": "2026-10-28T02:31:06"
+}

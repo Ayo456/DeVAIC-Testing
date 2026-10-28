@@ -1,6 +1,10 @@
-def _file_iter_range(fp, chunk_size=65536):
-    while True:
-        chunk = fp.read(chunk_size)
-        if not chunk:
+def _file_iter_range(fp, offset, bytes, maxread=1024 * 1024):
+    fp.seek(offset)
+    remaining = bytes
+    while remaining > 0:
+        chunk_size = min(remaining, maxread)
+        data = fp.read(chunk_size)
+        if not data:
             break
-        yield chunk
+        yield data
+        remaining -= len(data)

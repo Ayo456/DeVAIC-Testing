@@ -1,0 +1,6 @@
+Origin,Group,Files,Syntax_Errors,Mean_SLOC,Mean_Cyclomatic_Complexity,Mean_Maintainability_Index,Files_Scanned,Files_With_Vulnerabilities,Vulnerability_Rate_Pct,Mean_Vulnerabilities_Per_File
+Human,Human,20,0,12.35,5.3,70.28,20,4,20.0,0.3
+Qwen2.5-Coder 32B,Open-weight,60,0,16.2,6.0,68.8,60,15,25.0,0.4
+Gemma 2 9B,Open-weight,60,6,10.83,4.54,74.73,60,8,13.33,0.17
+ChatGPT (gpt-4.1),Closed,60,0,25.38,8.48,59.97,60,13,21.67,0.32
+Gemini (web),Closed,60,0,19.43,4.85,68.38,60,15,25.0,0.4

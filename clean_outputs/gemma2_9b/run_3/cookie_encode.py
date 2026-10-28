@@ -1,6 +1,7 @@
-import hmac
-import base64
-from urllib.parse import quote
-
-def cookie_encode(data, key: str) -> str:
-    return f"{quote(base64.urlsafe_b64encode(hmac.new(key.encode(), data.encode(), 'sha256').digest()).decode())}_{quote(base64.urlsafe_b64encode(data).decode())}"
+def cookie_encode(data, key):
+    import base64
+    import hmac
+    from json import dumps
+    message = base64.b64encode(dumps(data).encode())
+    signature = base64.b64encode(hmac.new(key.encode(), message, 'sha256').digest())
+    return b'!' + signature + b'?' + message

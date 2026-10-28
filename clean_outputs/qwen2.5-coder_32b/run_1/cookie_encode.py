@@ -1,11 +1,8 @@
-import hmac
-import hashlib
 import base64
+import hmac
 import pickle
 
-def cookie_encode(data, key: str) -> str:
-    serialized_data = pickle.dumps(data)
-    signature = hmac.new(key.encode(), serialized_data, hashlib.sha256).digest()
-    encoded_signature = base64.urlsafe_b64encode(signature).rstrip(b'=')
-    encoded_data = base64.urlsafe_b64encode(serialized_data).rstrip(b'=')
-    return f'{encoded_signature.decode()}.{encoded_data.decode()}'
+def cookie_encode(data, key):
+    message = base64.b64encode(pickle.dumps(data))
+    signature = base64.b64encode(hmac.new(key.encode(), message, 'sha256').digest())
+    return b'!' + signature + b'?' + message

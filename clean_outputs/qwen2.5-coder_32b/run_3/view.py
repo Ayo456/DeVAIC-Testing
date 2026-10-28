@@ -1,15 +1,18 @@
+import functools
+
 def view(tpl_name, **defaults):
 
-    def decorator(func):
+    def decorator(handler):
 
+        @functools.wraps(handler)
         def wrapper(*args, **kwargs):
-            result = func(*args, **kwargs)
+            result = handler(*args, **kwargs)
             if isinstance(result, dict):
-                tplvars = {**defaults, **result}
+                variables = {**defaults, **result}
             elif result is None:
-                tplvars = defaults
+                variables = defaults
             else:
                 return result
-            return template(tpl_name, **tplvars)
+            return template(tpl_name, **variables)
         return wrapper
     return decorator

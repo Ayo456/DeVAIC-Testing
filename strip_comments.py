@@ -158,13 +158,27 @@ def clean_python_code(raw_text: str) -> str:
 RAW_DIR = "./raw_outputs"
 CLEAN_DIR = "./clean_outputs"
 
+# The original Bottle functions go through the same cleaner, so the human
+# baseline is formatted the same way as the model outputs it is compared to.
+HUMAN_DIR = os.path.join("bottle_repo", "human_code")
+HUMAN_FOLDER = "human_code"
+
+# Gemini outputs made in the web interface (no API key needed), stored as
+# bottle_repo_regen/gemini/<task>/regen_<n>.py. They are cleaned into the
+# same <model>/run_<n>/<task>.py layout as the generated outputs.
+GEMINI_WEB_DIR = os.path.join("bottle_repo_regen", "gemini")
+GEMINI_WEB_FOLDER = "gemini-web"
+
 parser = argparse.ArgumentParser(
     description="Strip Markdown, comments, and docstrings from model outputs."
 )
 parser.add_argument(
     "--models",
     nargs="+",
-    help="Only clean model folders whose name contains one of these (e.g. gpt).",
+    help=(
+        "Only clean model folders whose name contains one of these (e.g. gpt)."
+        " Use 'human' for the original Bottle functions."
+    ),
 )
 args = parser.parse_args()
 
@@ -198,18 +212,36 @@ for filepath in all_files:
         is_target_pair = (filename, parent_run) in TARGET_PAIRS
 
         if is_qwen and is_target_pair:
-            python_files.append(filepath)
+            python_files.append((filepath, rel_path))
 
     else:
-        python_files.append(filepath)
+        python_files.append((filepath, rel_path))
+
+if not TARGET_ONLY and (
+    not args.models or any(m.lower() in HUMAN_FOLDER for m in args.models)
+):
+    for filepath in sorted(glob.glob(os.path.join(HUMAN_DIR, "*.py"))):
+        python_files.append(
+            (filepath, os.path.join(HUMAN_FOLDER, os.path.basename(filepath)))
+        )
+
+if not TARGET_ONLY and (
+    not args.models or any(m.lower() in GEMINI_WEB_FOLDER for m in args.models)
+):
+    pattern = os.path.join(GEMINI_WEB_DIR, "*", "regen_*.py")
+    for filepath in sorted(glob.glob(pattern)):
+        task = os.path.basename(os.path.dirname(filepath))
+        run_num = re.search(r"regen_(\d+)", filepath).group(1)
+        python_files.append(
+            (filepath, os.path.join(GEMINI_WEB_FOLDER, f"run_{run_num}", f"{task}.py"))
+        )
 
 print(
     f"Cleaning {len(python_files)} model output files"
     "..."
 )
 
-for raw_path in python_files:
-    rel_path = os.path.relpath(raw_path, RAW_DIR)
+for raw_path, rel_path in python_files:
     clean_path = os.path.join(CLEAN_DIR, rel_path)
 
     os.makedirs(

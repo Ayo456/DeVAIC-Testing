@@ -1,8 +1,12 @@
 def yieldroutes(func):
-    if hasattr(func, '__wrapped__'):
-        yield from yieldroutes(func.__wrapped__)
-    elif hasattr(func, 'routes'):
-        for route in func.routes:
-            yield from yieldroutes(route.handler)
-    else:
-        yield func
+    import inspect
+    sig = inspect.signature(func)
+    base_path = '/' + func.__name__.replace('__', '/')
+    params = list(sig.parameters.values())
+    required_params = [p.name for p in params if p.default == inspect.Parameter.empty]
+    optional_params = [p.name for p in params if p.default != inspect.Parameter.empty]
+    path = base_path + ''.join((f'/<{p}>' for p in required_params))
+    yield path
+    for i in range(len(optional_params)):
+        path += f'/<{optional_params[i]}>'
+        yield path

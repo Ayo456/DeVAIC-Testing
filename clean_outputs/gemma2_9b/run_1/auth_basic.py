@@ -1,17 +1,13 @@
-def auth_basic(check_func):
+def auth_basic(check, realm='private', text='Access denied'):
 
     def decorator(handler):
 
-        def inner(request):
-            auth = request.headers.get('Authorization')
-            if not auth:
-                return (401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
-            try:
-                user, password = auth.split(' ')[1].decode('base64').split(':')
-            except:
-                return (401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
-            if not check_func(user, password):
-                return (401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
-            return handler(request)
-        return inner
+        def wrapper(*args, **kwargs):
+            if request.auth is None:
+                return HTTPError(401, text).add_header('WWW-Authenticate', f'Basic realm="{realm}"')
+            user, password = request.auth
+            if not check(user, password):
+                return HTTPError(401, text).add_header('WWW-Authenticate', f'Basic realm="{realm}"')
+            return handler(*args, **kwargs)
+        return wrapper
     return decorator

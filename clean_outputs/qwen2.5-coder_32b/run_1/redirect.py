@@ -1,10 +1,7 @@
-from werkzeug.exceptions import HTTPException
-
-class Redirect(HTTPException):
-
-    def __init__(self, url: str, code: int=None):
-        self.code = code if code is not None else 303
-        self.headers = {'Location': url}
-
 def redirect(url: str, code: int=None):
-    raise Redirect(url, code)
+    from urllib.parse import urljoin
+    absolute_url = urljoin(request.url, url)
+    if code is None:
+        code = 303 if request.protocol_version == 'HTTP/1.1' else 302
+    response.headers['Location'] = absolute_url
+    raise HTTPResponse(status=code, headers=response.headers, cookies=response.cookies)

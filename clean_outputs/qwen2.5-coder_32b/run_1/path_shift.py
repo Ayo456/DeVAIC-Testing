@@ -1,14 +1,18 @@
 def path_shift(script_name: str, path_info: str, shift: int=1) -> tuple:
-    script_parts = script_name.rstrip('/').split('/')
-    path_parts = path_info.lstrip('/').split('/')
+
+    def split_path(path):
+        return [part for part in path.strip('/').split('/') if part]
+    script_segments = split_path(script_name)
+    path_segments = split_path(path_info)
     if shift > 0:
-        shift = min(shift, len(path_parts))
-        script_parts.extend(path_parts[:shift])
-        path_parts = path_parts[shift:]
+        assert len(path_segments) >= shift, 'Not enough segments in path_info to shift'
+        script_segments.extend(path_segments[:shift])
+        path_segments = path_segments[shift:]
     elif shift < 0:
-        shift = -min(-shift, len(script_parts))
-        path_parts = script_parts[shift:] + path_parts
-        script_parts = script_parts[:shift]
-    new_script_name = '/'.join(script_parts) + '/'
-    new_path_info = '/' + '/'.join(path_parts)
+        shift = abs(shift)
+        assert len(script_segments) >= shift, 'Not enough segments in script_name to shift'
+        path_segments = script_segments[-shift:] + path_segments
+        script_segments = script_segments[:-shift]
+    new_script_name = '/' + '/'.join(script_segments) + '/'
+    new_path_info = '/' + '/'.join(path_segments) + ('/' if path_info.endswith('/') and path_segments else '')
     return (new_script_name, new_path_info)

@@ -280,6 +280,7 @@ def run_provider(provider_cls, prompt_files, args):
         raise
 
     write_manifest(manifest, model_dir)
+    return "stopped_early" not in manifest
 
 
 def run_all(provider, model_dir, prompt_files, manifest, overwrite):
@@ -334,8 +335,16 @@ def main():
 
     print(f"Found {len(prompt_files)} prompts.")
 
-    for name in args.providers:
-        run_provider(PROVIDERS[name], prompt_files, args)
+    failed = [
+        name for name in args.providers
+        if run_provider(PROVIDERS[name], prompt_files, args) is False
+    ]
+
+    if failed:
+        # A non-zero exit stops chained steps (e.g. `; if ($?) { ... }`)
+        # from cleaning and measuring a run that never happened.
+        print(f"\n[X] API generation stopped early for: {', '.join(failed)}")
+        sys.exit(1)
 
     print("\n✓ API generation pipeline complete!")
 
