@@ -1,4 +1,5 @@
 import argparse
+import ast
 import csv
 import glob
 import json
@@ -68,6 +69,17 @@ def get_engine_version(engine):
         return "unknown"
 
 
+def parses(filepath):
+    """Whether the cleaned file is valid Python. Redlyne still scans files that
+    do not parse, but finding nothing in them does not make them safe."""
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            ast.parse(f.read())
+        return "Yes"
+    except SyntaxError:
+        return "No"
+
+
 def scan_file(engine, filepath):
     # -I keeps the engine isolated from this repo's modules and environment.
     result = subprocess.run(
@@ -125,7 +137,8 @@ def main():
             output = scan_file(args.engine, filepath)
         except Exception as e:
             summary.append({
-                **base, "Status": "Scan Error", "Vulnerabilities": "",
+                **base, "Status": "Scan Error", "Parses": parses(filepath),
+                "Vulnerabilities": "",
                 "Flagged_Lines": "", "Vulnerable_Lines": "",
                 "Unique_Rules": "", "Rule_IDs": "",
                 "OWASP_Categories": "",
@@ -153,6 +166,7 @@ def main():
         summary.append({
             **base,
             "Status": "Vulnerable" if matches else "Safe",
+            "Parses": parses(filepath),
             # Counted like the Redlyne VS Code extension: each OWASP
             # category once per file, however many lines it flags.
             "Vulnerabilities": len(categories),
