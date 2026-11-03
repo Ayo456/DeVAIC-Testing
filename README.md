@@ -6,14 +6,27 @@ A GitHub Repository made to organize files that will be used for my Student Rese
 | Model | Type | How it was run |
 |---|---|---|
 | ChatGPT (`gpt-4.1-2025-04-14`) | Closed | OpenAI API (`generate_api.py`) |
-| Gemini (`gemini-2.5-flash`) | Closed | Gemini API (`generate_api.py`) |
+| Gemini (`gemini-2.5-flash`) | Closed | Gemini API (`generate_api.py`) — **not generated yet** (the 2026-10-28 attempt stopped with "API key not valid") |
 | Qwen2.5-Coder 32B (`qwen2.5-coder:32b`, Q4_K_M) | Open-weight | Locally via Ollama (`generate_local.py`) |
 | Gemma 2 9B (`gemma2:9b`, Q4_0) | Open-weight | Locally via Ollama (`generate_local.py`) |
 
-All four models use the same prompts and settings: temperature 0.2, top_p 0.9, at most
+ChatGPT, Qwen and Gemma use the same prompts and settings: temperature 0.2, top_p 0.9, at most
 2048 output tokens, seeds 43/44/45 for runs 1/2/3, and one independent request per prompt.
-Earlier ChatGPT and Gemini outputs in `bottle_repo_regen/` were made in the web
-interfaces, where model version and temperature are unknown; they are kept for reference only.
+Gemini will use the same settings once it is generated through the API.
+
+Until then, the results use the Gemini outputs in `bottle_repo_regen/gemini/` (cleaned into
+`clean_outputs/gemini-web/`). They were made earlier in the web interface, from the earlier
+prompts, with unknown model version and temperature, so they are **not directly comparable**
+with the other models. The earlier ChatGPT web outputs in `bottle_repo_regen/chatgpt/` are kept
+for reference only.
+
+Because each run uses a different seed, outputs are expected to differ between runs 1, 2 and 3.
+Reproducibility means that re-running the same run (same model, prompt and seed) gives the same
+output; differences between runs measure output variability, not reproducibility.
+
+Redlyne results are **tool flags, not confirmed vulnerabilities**. A file counts as flagged when
+Redlyne reports at least one finding; findings still need manual review and functional tests
+before they can be called vulnerabilities.
 
 ## Repository layout
 

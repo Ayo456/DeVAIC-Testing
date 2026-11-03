@@ -34,7 +34,10 @@ def extract_python_code_blocks(text: str) -> str:
     Extracts pure Python code from LLM Markdown responses.
     Filters out non-Python blocks (e.g. ```sh, ```bash) and joins valid Python code.
     """
-    python_specific_pattern = r"```(?:python|py)\s*\n(.*?)\n```"
+    # The newline before the closing fence is optional: some models end the
+    # block on the last code line (e.g. "yield data```"). Requiring it left the
+    # fences in the cleaned file, which then failed to parse.
+    python_specific_pattern = r"```(?:python|py)\s*\n(.*?)\n?```"
     specific_matches = re.findall(
         python_specific_pattern,
         text,
@@ -45,7 +48,7 @@ def extract_python_code_blocks(text: str) -> str:
         blocks_to_check = specific_matches
 
     else:
-        tagged_pattern = r"```([a-zA-Z0-9_-]*)\s*\n(.*?)\n```"
+        tagged_pattern = r"```([a-zA-Z0-9_-]*)\s*\n(.*?)\n?```"
         tagged_matches = re.findall(
             tagged_pattern,
             text,
@@ -241,6 +244,8 @@ print(
     "..."
 )
 
+not_parsable = []
+
 for raw_path, rel_path in python_files:
     clean_path = os.path.join(CLEAN_DIR, rel_path)
 
@@ -257,6 +262,22 @@ for raw_path, rel_path in python_files:
     with open(clean_path, "w", encoding="utf-8") as f:
         f.write(cleaned_code)
 
-    print(f" [✓] Cleaned: {rel_path}")
+    # A cleaned file that does not parse is either a real model error or a
+    # cleaning error (e.g. leftover Markdown). Flag it so it gets checked by hand.
+    try:
+        ast.parse(cleaned_code)
+        print(f" [✓] Cleaned: {rel_path}")
+    except SyntaxError as e:
+        not_parsable.append(rel_path)
+        leftover = " (Markdown fence left in file)" if "```" in cleaned_code else ""
+        print(f" [!] Cleaned but does not parse: {rel_path} line {e.lineno}{leftover}")
+
+if not_parsable:
+    print(
+        f"\n{len(not_parsable)} cleaned file(s) do not parse; check the raw output"
+        " to tell model errors from cleaning errors:"
+    )
+    for rel_path in not_parsable:
+        print(f"   {rel_path}")
 
 print("\n✓ Cleaning complete!")

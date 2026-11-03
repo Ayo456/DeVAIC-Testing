@@ -69,6 +69,13 @@ def vulnerability_count(row):
     return len([c for c in row.get("OWASP_Categories", "").split(";") if c.strip()])
 
 
+def counted_scan(row):
+    """A Redlyne result counts only if the scan ran and the file is valid Python.
+    No findings in a file that does not parse does not make it safe.
+    (Older redlyne_summary.csv files have no Parses column; they are all counted.)"""
+    return row["Status"] != "Scan Error" and row.get("Parses", "Yes") != "No"
+
+
 def mean(values):
     values = [v for v in values if v is not None]
     return statistics.mean(values) if values else None
@@ -87,7 +94,7 @@ def summarize(metrics, redlyne):
         valid = [r for r in m_rows if r["Status"] == "Valid"]
         r_rows = [
             r for r in redlyne
-            if origin_of(r["Model_Run"]) == name and r["Status"] != "Scan Error"
+            if origin_of(r["Model_Run"]) == name and counted_scan(r)
         ]
         vulnerable = [r for r in r_rows if r["Status"] == "Vulnerable"]
 
@@ -104,8 +111,8 @@ def summarize(metrics, redlyne):
                 number(r["Maintainability_Index"]) for r in valid
             ),
             "Files_Scanned": len(r_rows),
-            "Files_With_Vulnerabilities": len(vulnerable),
-            "Vulnerability_Rate_Pct": (
+            "Files_Flagged": len(vulnerable),
+            "Flagged_Rate_Pct": (
                 100 * len(vulnerable) / len(r_rows) if r_rows else None
             ),
             "Mean_Vulnerabilities_Per_File": mean(
@@ -124,7 +131,7 @@ def build_matrix(tasks, redlyne):
                 r for r in redlyne
                 if origin_of(r["Model_Run"]) == name
                 and os.path.splitext(r["File"])[0] == task
-                and r["Status"] != "Scan Error"
+                and counted_scan(r)
             ]
             cells[(task, name)] = (
                 mean(vulnerability_count(r) for r in rows) if rows else None
@@ -268,7 +275,7 @@ def heatmap(tasks, cells):
             tip = (
                 f"{task} · {name}: "
                 + ("no outputs scanned" if value is None
-                   else f"{fmt(value, 2)} vulnerabilities per file (mean of runs)")
+                   else f"{fmt(value, 2)} flagged categories per file (mean of runs)")
             )
             style = f' style="fill:{fill}"' if fill else ""
             # 2px surface gap between cells.
@@ -286,8 +293,8 @@ def summary_table(summary):
     head = (
         "<tr><th>Origin</th><th>Group</th><th>Files</th><th>Syntax errors</th>"
         "<th>Mean SLOC</th><th>Mean CC</th><th>Mean MI</th>"
-        "<th>Files with vulnerabilities</th><th>Vulnerability rate</th>"
-        "<th>Vulnerabilities / file</th></tr>"
+        "<th>Files flagged / scanned</th><th>Flag rate</th>"
+        "<th>Flagged OWASP categories / file</th></tr>"
     )
     rows = []
     for s in summary.values():
@@ -298,9 +305,9 @@ def summary_table(summary):
             f"<td>{fmt(s['Mean_SLOC'])}</td>"
             f"<td>{fmt(s['Mean_Cyclomatic_Complexity'])}</td>"
             f"<td>{fmt(s['Mean_Maintainability_Index'])}</td>"
-            f"<td>{s['Files_With_Vulnerabilities'] if s['Files_Scanned'] else '—'}"
+            f"<td>{s['Files_Flagged'] if s['Files_Scanned'] else '—'}"
             f"{' / ' + str(s['Files_Scanned']) if s['Files_Scanned'] else ''}</td>"
-            f"<td>{fmt(s['Vulnerability_Rate_Pct'], 0, '%')}</td>"
+            f"<td>{fmt(s['Flagged_Rate_Pct'], 0, '%')}</td>"
             f"<td>{fmt(s['Mean_Vulnerabilities_Per_File'], 2)}</td>"
             "</tr>"
         )
@@ -481,14 +488,16 @@ prompts with temperature 0.2 and seeds 43–45; the Gemini outputs were made ear
 Gemini web interface, where the prompts differed and the model version and temperature are unknown.</p>
 {status_html}
 
-<h2>RQ1 · Vulnerability rate by code origin</h2>
-<p class="note">Share of files with at least one Redlyne vulnerability.</p>
+<h2>RQ1 (preliminary) · Redlyne flag rate by code origin</h2>
+<p class="note">Share of scanned, syntactically valid files with at least one Redlyne finding.
+These are tool flags, not confirmed vulnerabilities: they have not yet been checked by manual
+review or functional tests, and some may be false positives.</p>
 {legend()}
-<div class="chart">{bar_chart(summary, "Vulnerability_Rate_Pct", "Vulnerability rate by code origin", "%", 0, rq1_max)}</div>
+<div class="chart">{bar_chart(summary, "Flagged_Rate_Pct", "Redlyne flag rate by code origin", "%", 0, rq1_max)}</div>
 
-<h2>Vulnerability matrix · vulnerabilities per task</h2>
-<p class="note">Mean Redlyne vulnerabilities per file — each OWASP category counted once per file, as in the Redlyne extension (AI origins averaged over 3 runs).
-Darker = more vulnerabilities · 0 = none found · — = no outputs scanned.</p>
+<h2>Redlyne findings per task</h2>
+<p class="note">Mean flagged OWASP categories per file — each category counted once per file, as in the Redlyne extension (AI origins averaged over 3 runs).
+Darker = more findings · 0 = none found · — = no outputs scanned.</p>
 <div class="chart">{heatmap(tasks, cells)}</div>
 
 <h2>RQ2 · Code length vs. complexity</h2>
@@ -501,7 +510,7 @@ complexity means more lines without more control-flow branching.</p>
   <div class="chart"><h3>Maintainability index (0–100)</h3>{bar_chart(summary, "Mean_Maintainability_Index", "Mean maintainability index", max_value=100)}</div>
 </div>
 
-<h2>Where the vulnerabilities are</h2>
+<h2>Where Redlyne flags code</h2>
 <p class="note">Every line Redlyne flagged, grouped by task. Line numbers refer to the cleaned
 file in clean_outputs/ (comments and docstrings removed). One vulnerability can be flagged on
 several lines.</p>
@@ -549,7 +558,7 @@ def main():
             f" {s['Origin']:<20} files={s['Files']:<3} SLOC={fmt(s['Mean_SLOC'])}"
             f" CC={fmt(s['Mean_Cyclomatic_Complexity'])}"
             f" MI={fmt(s['Mean_Maintainability_Index'])}"
-            f" vuln={fmt(s['Vulnerability_Rate_Pct'], 0, '%')}"
+            f" flagged={fmt(s['Flagged_Rate_Pct'], 0, '%')}"
         )
     print(
         f"\n✓ Report written to '{os.path.join(RESULTS_DIR, 'report.html')}'"
