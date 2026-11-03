@@ -8,7 +8,7 @@ def _iter_chunked(self, read, bufsize):
             header += c
             if not c: raise err
             if len(header) > bufsize: raise err
-        size, _ = header.partition(sem)
+        size, _, _ = header.partition(sem)
         try:
             maxread = int(tonat(size.strip()), 16)
         except ValueError:
@@ -16,9 +16,11 @@ def _iter_chunked(self, read, bufsize):
         if maxread == 0: break
         buff = bs
         while maxread > 0:
-            if not buff: buff = read(min(maxread, bufsize))
+            if not buff:
+                buff = read(min(maxread, bufsize))
             part, buff = buff[:maxread], buff[maxread:]
             if not part: raise err
             yield part
             maxread -= len(part)
-        if read(2) != rn: raise err
+        if read(2) != rn:
+            raise err
